@@ -3,15 +3,16 @@
 """
 database.py
 
-A series of atomic functions to leverage the (node, edge) schema 
-of json-based nodes, and edges with optional json properties.
+A series of functions to leverage the (node, edge) schema of 
+json-based nodes, and edges with optional json properties,
+using an atomic transaction wrapper function.
 
 """
 
 import sqlite3
 import json
 
-def atomic_transaction(db_file, cursor_exec_fn):
+def atomic(db_file, cursor_exec_fn):
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
     results = cursor_exec_fn(cursor)
@@ -24,7 +25,7 @@ def initialize(db_file, schema_file='schema.sql'):
         with open(schema_file) as f:
             for statement in f.read().split(';'):
                 cursor.execute(statement)
-    return atomic_transaction(db_file, _init)
+    return atomic(db_file, _init)
 
 def _set_id(identifier, data):
     if identifier is not None:
