@@ -48,9 +48,15 @@ def remove_node(identifier):
         cursor.execute("DELETE FROM nodes WHERE id = ?", (identifier,))
     return _remove_node
 
+def _parse_search_results(results, idx=0):
+    return [json.loads(item[idx]) for item in results]
+
 def find_node(identifier):
     def _find_node(cursor):
-        return cursor.execute("SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?", (identifier,)).fetchall()
+        results = cursor.execute("SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?", (identifier,)).fetchall()
+        if len(results) == 1:
+            return _parse_search_results(results).pop()
+        return None
     return _find_node
 
 def _search_where(properties, predicate='='):
@@ -70,7 +76,7 @@ def _search_contains(properties):
 
 def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
     def _find_nodes(cursor):
-        return cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall()
+        return _parse_search_results(cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall())
     return _find_nodes
 
 def find_neighbors(identifier):
