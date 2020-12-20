@@ -28,3 +28,24 @@ The [schema](schema.sql) consists of just two structures:
 ## Basic Functions
 
 The python [database script](database.py) provides convenience functions for [atomic transactions](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) to add, delete, connect, and search for nodes.
+
+### Example
+
+Dropping into a python shell, we can create and connect people from the early days of [Apple Computer](https://en.wikipedia.org/wiki/Apple_Inc.). The resulting database will be saved to a SQLite file named `apple.sqlite`:
+
+```
+>>> apple = "apple.sqlite"
+>>> import database as db
+>>> db.initialize(apple)
+>>> db.atomic(apple, db.add_node({'name': 'Apple Computer Company', 'type':['company', 'start-up'], 'founded': 'April 1, 1976'}, 1))
+>>> db.atomic(apple, db.add_node({'name': 'Steve Wozniak', 'type':['person','engineer','founder']}, 2))
+>>> db.atomic(apple, db.add_node({'name': 'Steve Jobs', 'type':['person','designer','founder']}, 3))
+>>> db.atomic(apple, db.add_node({'name': 'Ronald Wayne', 'type':['person','administrator','founder']}, 4))
+>>> db.atomic(apple, db.add_node({'name': 'Mike Markkula', 'type':['person','investor']}, 5))
+>>> db.atomic(apple, db.connect_nodes(2, 1, {'action': 'founded'}))
+>>> db.atomic(apple, db.connect_nodes(3, 1, {'action': 'founded'}))
+>>> db.atomic(apple, db.connect_nodes(4, 1, {'action': 'founded'}))
+>>> db.atomic(apple, db.connect_nodes(5, 1, {'action': 'invested', 'equity': 80000, 'debt': 170000}))
+>>> db.atomic(apple, db.connect_nodes(1, 4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'}))
+>>> db.atomic(apple, db.connect_nodes(2, 3))
+```
