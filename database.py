@@ -86,12 +86,12 @@ def find_neighbors(identifier):
 
 def find_outbound_neighbors(identifier):
     def _find_outbound_neighbors(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE target = ?", (identifier,)).fetchall()
+        return cursor.execute("SELECT * FROM edges WHERE source = ?", (identifier,)).fetchall()
     return _find_outbound_neighbors
 
 def find_inbound_neighbors(identifier):
     def _find_inbound_neighbors(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE source = ?", (identifier,)).fetchall()
+        return cursor.execute("SELECT * FROM edges WHERE target = ?", (identifier,)).fetchall()
     return _find_inbound_neighbors
 
 def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
