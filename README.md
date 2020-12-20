@@ -66,4 +66,14 @@ Paths through the graph can be discovered with a starting node id, and an option
 [{'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder'], 'id': 2}, {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder'], 'id': 3}]
 >>> db.traverse(apple, 4, 5)
 [{'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder'], 'id': 4}, {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976', 'id': 1}, {'name': 'Mike Markkula', 'type': ['person', 'investor'], 'id': 5}]
+>>> db.atomic(apple, db.find_inbound_neighbors(1))
+[('2', '1', '{"action":"founded"}'), ('3', '1', '{"action":"founded"}'), ('4', '1', '{"action":"founded"}'), ('5', '1', '{"action":"invested","equity":80000,"debt":170000}')]
+>>> db.atomic(apple, db.find_outbound_neighbors(1))
+[('1', '4', '{"action":"divested","amount":800,"date":"April 12, 1976"}')]
+>>> db.atomic(apple, db.find_outbound_neighbors(2))
+[('2', '1', '{"action":"founded"}'), ('2', '3', '{}')]
+>>> db.atomic(apple, db.find_inbound_neighbors(2))
+[]
+>>> db.atomic(apple, db.find_inbound_neighbors(3))
+[('2', '3', '{}')]
 ```
