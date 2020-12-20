@@ -72,3 +72,18 @@ def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
     def _find_nodes(cursor):
         return cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall()
     return _find_nodes
+
+def find_neighbors(identifier):
+    def _find_neighbors(cursor):
+        return cursor.execute("SELECT * FROM edges WHERE source = ? OR target = ?", (identifier, identifier,)).fetchall()
+    return _find_neighbors
+
+def find_outbound_neighbors(identifier):
+    def _find_outbound_neighbors(cursor):
+        return cursor.execute("SELECT * FROM edges WHERE target = ?", (identifier,)).fetchall()
+    return _find_outbound_neighbors
+
+def find_inbound_neighbors(identifier):
+    def _find_inbound_neighbors(cursor):
+        return cursor.execute("SELECT * FROM edges WHERE source = ?", (identifier,)).fetchall()
+    return _find_inbound_neighbors
