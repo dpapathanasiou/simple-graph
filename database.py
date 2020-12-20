@@ -93,3 +93,24 @@ def find_inbound_neighbors(identifier):
     def _find_inbound_neighbors(cursor):
         return cursor.execute("SELECT * FROM edges WHERE source = ?", (identifier,)).fetchall()
     return _find_inbound_neighbors
+
+def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
+    def _depth_first_search(cursor):
+        path = []
+        queue = []
+        source_node = atomic(db_file, find_node(src))
+        if source_node:
+            queue.append(source_node)
+        while queue:
+            node = queue.pop()
+            if node not in path:
+                path.append(node)
+                if node['id'] == tgt:
+                    break
+                neighbors = atomic(db_file, neighbors_fn(node['id']))
+                for identifier in set(_parse_search_results(neighbors)).union(_parse_search_results(neighbors, 1)):
+                    neighbor = atomic(db_file, find_node(identifier))
+                    if neighbor:
+                        queue.append(neighbor)
+        return path
+    return atomic(db_file, _depth_first_search)
