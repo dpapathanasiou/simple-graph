@@ -49,3 +49,21 @@ Dropping into a python shell, we can create and connect people from the early da
 >>> db.atomic(apple, db.connect_nodes(1, 4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'}))
 >>> db.atomic(apple, db.connect_nodes(2, 3))
 ```
+
+The nodes can be searched by their ids or any other combination of attributes (either as strict equality, or using `_search_like` in combination with `_search_starts_with` or `_search_contains`):
+
+```
+>>> db.atomic(apple, db.find_node(1))
+{'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976', 'id': 1}
+>>> db.atomic(apple, db.find_nodes({'name': 'Steve'}, db._search_like, db._search_starts_with))
+[{'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder'], 'id': 2}, {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder'], 'id': 3}]
+```
+
+Paths through the graph can be discovered with a starting node id, and an optional ending id; the default neighbor expansion is nodes connected nodes in either direction, but that can changed by specifying either `find_outbound_neighbors` or `find_inbound_neighbors` instead:
+
+```
+>>> db.traverse(apple, 2, 3)
+[{'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder'], 'id': 2}, {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder'], 'id': 3}]
+>>> db.traverse(apple, 4, 5)
+[{'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder'], 'id': 4}, {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976', 'id': 1}, {'name': 'Mike Markkula', 'type': ['person', 'investor'], 'id': 5}]
+```
