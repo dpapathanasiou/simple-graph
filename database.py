@@ -37,6 +37,13 @@ def add_node(data, identifier=None):
         cursor.execute("INSERT INTO nodes VALUES(json(?))", (json.dumps(_set_id(identifier, data)),))
     return _add_node
 
+def upsert_node(identifier, data):
+    def _upsert_node(cursor):
+        current_data = find_node(identifier)
+        updated_data = {**current_data, **data}
+        cursor.execute("UPDATE nodes SET body = json(?) WHERE id = ?", (json.dumps(_set_id(identifier, updated_data)),))
+    return _upsert_node
+
 def connect_nodes(source_id, target_id, properties={}):
     def _connect_nodes(cursor):
         cursor.execute("INSERT INTO edges VALUES(?, ?, json(?))", (source_id, target_id, json.dumps(properties),))
@@ -56,7 +63,7 @@ def find_node(identifier):
         results = cursor.execute("SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?", (identifier,)).fetchall()
         if len(results) == 1:
             return _parse_search_results(results).pop()
-        return None
+        return {}
     return _find_node
 
 def _search_where(properties, predicate='='):
