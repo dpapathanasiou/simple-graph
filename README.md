@@ -31,7 +31,7 @@ The python [database script](database.py) provides convenience functions for [at
 
 ### Example
 
-Dropping into a python shell, we can create and connect people from the early days of [Apple Computer](https://en.wikipedia.org/wiki/Apple_Inc.). The resulting database will be saved to a SQLite file named `apple.sqlite`:
+Dropping into a python shell, we can create, [upsert](https://en.wiktionary.org/wiki/upsert), and connect people from the early days of [Apple Computer](https://en.wikipedia.org/wiki/Apple_Inc.). The resulting database will be saved to a SQLite file named `apple.sqlite`:
 
 ```
 >>> apple = "apple.sqlite"
@@ -48,6 +48,7 @@ Dropping into a python shell, we can create and connect people from the early da
 >>> db.atomic(apple, db.connect_nodes(5, 1, {'action': 'invested', 'equity': 80000, 'debt': 170000}))
 >>> db.atomic(apple, db.connect_nodes(1, 4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'}))
 >>> db.atomic(apple, db.connect_nodes(2, 3))
+>>> db.atomic(apple, db.upsert_node(2, {'nickname': 'Woz'}))
 ```
 
 The nodes can be searched by their ids or any other combination of attributes (either as strict equality, or using `_search_like` in combination with `_search_starts_with` or `_search_contains`):
@@ -56,7 +57,7 @@ The nodes can be searched by their ids or any other combination of attributes (e
 >>> db.atomic(apple, db.find_node(1))
 {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976', 'id': 1}
 >>> db.atomic(apple, db.find_nodes({'name': 'Steve'}, db._search_like, db._search_starts_with))
-[{'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder'], 'id': 2}, {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder'], 'id': 3}]
+[{'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder'], 'id': 2, 'nickname': 'Woz'}, {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder'], 'id': 3}]
 ```
 
 Paths through the graph can be discovered with a starting node id, and an optional ending id; the default neighbor expansion is nodes connected nodes in either direction, but that can changed by specifying either `find_outbound_neighbors` or `find_inbound_neighbors` instead:
