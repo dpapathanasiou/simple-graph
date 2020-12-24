@@ -101,6 +101,15 @@ def find_inbound_neighbors(identifier):
         return cursor.execute("SELECT * FROM edges WHERE target = ?", (identifier,)).fetchall()
     return _find_inbound_neighbors
 
+def _get_edge_sources(results):
+    return _parse_search_results(results, 0)
+
+def _get_edge_targets(results):
+    return _parse_search_results(results, 1)
+
+def _get_edge_properties(results):
+    return _parse_search_results(results, 2)
+
 def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _depth_first_search(cursor):
         path = []
@@ -115,7 +124,7 @@ def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
                 if node['id'] == tgt:
                     break
                 neighbors = atomic(db_file, neighbors_fn(node['id']))
-                for identifier in set(_parse_search_results(neighbors)).union(_parse_search_results(neighbors, 1)):
+                for identifier in set(_get_edge_sources(neighbors)).union(_get_edge_targets(neighbors)):
                     neighbor = atomic(db_file, find_node(identifier))
                     if neighbor:
                         queue.append(neighbor)
