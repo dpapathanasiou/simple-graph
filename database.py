@@ -114,19 +114,18 @@ def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _depth_first_search(cursor):
         path = []
         queue = []
-        source_node = atomic(db_file, find_node(src))
-        if source_node:
-            queue.append(source_node)
+        if atomic(db_file, find_node(src)):
+            queue.append(src)
         while queue:
             node = queue.pop()
             if node not in path:
                 path.append(node)
-                if node['id'] == tgt:
+                if node == tgt:
                     break
-                neighbors = atomic(db_file, neighbors_fn(node['id']))
+                neighbors = atomic(db_file, neighbors_fn(node))
                 for identifier in set(_get_edge_sources(neighbors)).union(_get_edge_targets(neighbors)):
                     neighbor = atomic(db_file, find_node(identifier))
                     if neighbor:
-                        queue.append(neighbor)
+                        queue.append(identifier)
         return path
     return atomic(db_file, _depth_first_search)
