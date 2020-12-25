@@ -129,3 +129,41 @@ def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
                         queue.append(identifier)
         return path
     return atomic(db_file, _depth_first_search)
+
+def get_connections(source_id, target_id):
+    def _get_connections(cursor):
+        return cursor.execute("SELECT * FROM edges WHERE source = ? AND target = ?", (source_id, target_id,)).fetchall()
+    return _get_connections
+
+def _fstring_from_keys(keys, hide_key, kv_separator):
+    if hide_key:
+        return '\\n'.join(['{'+k+'}' for k in keys])
+    return '\\n'.join([k+kv_separator+'{'+k+'}' for k in keys])
+
+def _as_dot_label(body, exclude_keys, hide_key_name, kv_separator):
+    values = _fstring_from_keys([k for k in body.keys() if k not in exclude_keys], hide_key_name, kv_separator).format(**body)
+    return f"[label=\"{values}\"]"
+
+def _as_dot_node(body, exclude_keys=[], hide_key_name=False, kv_separator=' '):
+    name = body['id']
+    exclude_keys.append('id')
+    label = _as_dot_label(body, exclude_keys, hide_key_name, kv_separator)
+    return f"{name} {label};\n"
+
+def _as_dot_edge(src, tgt, body, exclude_keys=[], hide_key_name=False, kv_separator=' '):
+    label = _as_dot_label(body, exclude_keys, hide_key_name, kv_separator)
+    return f"{src} -> {tgt} {label};\n"
+
+def visualize(db_file, dot_file, path=[]):
+    def _visualize(cursor):
+        with open(dot_file, 'w') as w:
+            w.write("digraph {\n")
+            for node in [atomic(db_file, find_node(i)) for i in path]:
+                w.write(_as_dot_node(node))
+            for src, tgt in zip(path[0::2], path[1::2]):
+                for inbound in _get_edge_properties(atomic(db_file, get_connections(src, tgt))):
+                    w.write(_as_dot_edge(src, tgt, inbound))
+                for outbound in _get_edge_properties(atomic(db_file, get_connections(tgt, src))):
+                    w.write(_as_dot_edge(tgt, src, outbound))
+            w.write("}\n")
+    return atomic(db_file, _visualize)
