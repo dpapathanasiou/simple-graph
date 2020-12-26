@@ -24,10 +24,13 @@ The [schema](schema.sql) consists of just two structures:
 
 * [SQLite](https://www.sqlite.org/)
 * [Python](https://www.python.org/)
+* [Graphviz](https://graphviz.org/) optional, for visualization
 
 ## Basic Functions
 
 The python [database script](database.py) provides convenience functions for [atomic transactions](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) to add, delete, connect, and search for nodes.
+
+Any single node or path of nodes can also be depicted graphically by using the `visualize` function within the database script to generate [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz. 
 
 ### Example
 
@@ -74,3 +77,29 @@ Paths through the graph can be discovered with a starting node id, and an option
 >>> db.traverse(apple, 5, neighbors_fn=db.find_neighbors)
 [5, 1, 4, 3, 2]
 ```
+
+Any path or list of nodes can rendered graphically by using the `visualize` function. This command produces [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz:
+
+```
+>>> db.visualize(apple, 'apple.dot', [4, 1, 5])
+```
+
+The resuling file can produce a [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics) image, using this command line instruction:
+
+```sh
+dot -Tpng apple.dot -o apple.png
+```
+
+The default options include every key/value pair (excluding the id) in the node and edge objects:
+
+![Basic visualization](.examples/apple-raw.png)
+
+There are display options to help refine what is produced:
+
+```
+>>> db.visualize(apple, 'apple.dot', [4, 1, 5], exclude_node_keys=['type'], hide_edge_key=True)
+```
+
+![More refined visualization](.examples/apple.png)
+
+The resulting dot file can be edited further as needed; the [dot guide](https://graphviz.org/pdf/dotguide.pdf) has more options and examples.
