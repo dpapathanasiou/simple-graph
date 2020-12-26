@@ -160,16 +160,18 @@ def _as_dot_edge(src, tgt, body, exclude_keys=[], hide_key_name=False, kv_separa
     label = _as_dot_label(body, exclude_keys, hide_key_name, kv_separator)
     return f"{src} -> {tgt} {label};\n"
 
-def visualize(db_file, dot_file, path=[]):
+def visualize(db_file, dot_file, path=[], \
+        exclude_node_keys=[], hide_node_key=False, node_kv=' ', \
+        exclude_edge_keys=[], hide_edge_key=False, edge_kv=' '):
     def _visualize(cursor):
         with open(dot_file, 'w') as w:
             w.write("digraph {\n")
             for node in [atomic(db_file, find_node(i)) for i in path]:
-                w.write(_as_dot_node(node))
+                w.write(_as_dot_node(node, exclude_node_keys, hide_node_key, node_kv))
             for src, tgt in pairwise(path):
                 for inbound in _get_edge_properties(atomic(db_file, get_connections(src, tgt))):
-                    w.write(_as_dot_edge(src, tgt, inbound))
+                    w.write(_as_dot_edge(src, tgt, inbound, exclude_edge_keys, hide_edge_key, edge_kv))
                 for outbound in _get_edge_properties(atomic(db_file, get_connections(tgt, src))):
-                    w.write(_as_dot_edge(tgt, src, outbound))
+                    w.write(_as_dot_edge(tgt, src, outbound, exclude_edge_keys, hide_edge_key, edge_kv))
             w.write("}\n")
     return atomic(db_file, _visualize)
