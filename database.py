@@ -11,6 +11,7 @@ using an atomic transaction wrapper function.
 
 import sqlite3
 import json
+from itertools import tee
 
 def atomic(db_file, cursor_exec_fn):
     connection = sqlite3.connect(db_file)
@@ -135,6 +136,11 @@ def get_connections(source_id, target_id):
         return cursor.execute("SELECT * FROM edges WHERE source = ? AND target = ?", (source_id, target_id,)).fetchall()
     return _get_connections
 
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
 def _fstring_from_keys(keys, hide_key, kv_separator):
     if hide_key:
         return '\\n'.join(['{'+k+'}' for k in keys])
@@ -160,7 +166,7 @@ def visualize(db_file, dot_file, path=[]):
             w.write("digraph {\n")
             for node in [atomic(db_file, find_node(i)) for i in path]:
                 w.write(_as_dot_node(node))
-            for src, tgt in zip(path[0::2], path[1::2]):
+            for src, tgt in pairwise(path):
                 for inbound in _get_edge_properties(atomic(db_file, get_connections(src, tgt))):
                     w.write(_as_dot_edge(src, tgt, inbound))
                 for outbound in _get_edge_properties(atomic(db_file, get_connections(tgt, src))):
