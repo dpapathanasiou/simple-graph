@@ -32,6 +32,20 @@ The python [database script](database.py) provides convenience functions for [at
 
 Any single node or path of nodes can also be depicted graphically by using the `visualize` function within the database script to generate [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz. 
 
+## Testing
+
+There will be more robust and dedicated unit tests with [pytest](https://docs.pytest.org/en/latest/) soon, but in the meantime, running the example locally will do in a pinch.
+
+This bit of shell magic will pull out the commands from this document:
+
+```sh
+grep ">>> " README.md | grep -v "grep" | sed -e 's/>>> //'
+```
+
+Use a final `| clip` (Windows), `| pbcopy` (macOS), or `| xclip -selection clipboard` (most linuxes) to copy all the commands into your clipboard.
+
+If you have the correct version of SQLite installed, everything should just work without errors.
+
 ### Example
 
 Dropping into a python shell, we can create, [upsert](https://en.wiktionary.org/wiki/upsert), and connect people from the early days of [Apple Computer](https://en.wikipedia.org/wiki/Apple_Inc.). The resulting database will be saved to a SQLite file named `apple.sqlite`:
