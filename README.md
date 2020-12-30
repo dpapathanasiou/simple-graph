@@ -22,7 +22,7 @@ The [schema](schema.sql) consists of just two structures:
 
 ## Installation
 
-* [SQLite](https://www.sqlite.org/)
+* [SQLite](https://www.sqlite.org/), version 3.31.0 or higher; get the latest source or precompiled binaries from the [SQLite Download Page](https://www.sqlite.org/download.html) 
 * [Python](https://www.python.org/)
 * [Graphviz](https://graphviz.org/) optional, for visualization
 
