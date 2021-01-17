@@ -34,16 +34,24 @@ def _set_id(identifier, data):
         data["id"] = identifier
     return data
 
+def _insert_node(cursor, identifier, data):
+    cursor.execute("INSERT INTO nodes VALUES(json(?))", (json.dumps(_set_id(identifier, data)),))
+
 def add_node(data, identifier=None):
     def _add_node(cursor):
-        cursor.execute("INSERT INTO nodes VALUES(json(?))", (json.dumps(_set_id(identifier, data)),))
+        _insert_node(cursor, identifier, data)
     return _add_node
 
 def upsert_node(identifier, data):
     def _upsert_node(cursor):
         current_data = find_node(identifier)(cursor)
-        updated_data = {**current_data, **data}
-        cursor.execute("UPDATE nodes SET body = json(?) WHERE id = ?", (json.dumps(_set_id(identifier, updated_data)), identifier,))
+        if not current_data:
+            # no prior record exists, so regular insert
+            _insert_node(cursor, identifier, data)
+        else:
+            # merge the current and new data and update
+            updated_data = {**current_data, **data}
+            cursor.execute("UPDATE nodes SET body = json(?) WHERE id = ?", (json.dumps(_set_id(identifier, updated_data)), identifier,))
     return _upsert_node
 
 def connect_nodes(source_id, target_id, properties={}):

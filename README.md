@@ -22,7 +22,7 @@ The [schema](schema.sql) consists of just two structures:
 
 ## Installation
 
-* [SQLite](https://www.sqlite.org/)
+* [SQLite](https://www.sqlite.org/), version 3.31.0 or higher; get the latest source or precompiled binaries from the [SQLite Download Page](https://www.sqlite.org/download.html) 
 * [Python](https://www.python.org/)
 * [Graphviz](https://graphviz.org/) optional, for visualization
 
@@ -31,6 +31,20 @@ The [schema](schema.sql) consists of just two structures:
 The python [database script](database.py) provides convenience functions for [atomic transactions](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) to add, delete, connect, and search for nodes.
 
 Any single node or path of nodes can also be depicted graphically by using the `visualize` function within the database script to generate [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz. 
+
+## Testing
+
+There will be more robust and dedicated unit tests with [pytest](https://docs.pytest.org/en/latest/) soon, but in the meantime, running the example locally will do in a pinch.
+
+This bit of shell magic will pull out the commands from this document:
+
+```sh
+grep ">>> " README.md | grep -v "grep" | sed -e 's/>>> //'
+```
+
+Use a final `| clip` (Windows), `| pbcopy` (macOS), or `| xclip -selection clipboard` (most linuxes) to copy all the commands into your clipboard.
+
+If you have the correct version of SQLite installed, everything should just work without errors.
 
 ### Example
 

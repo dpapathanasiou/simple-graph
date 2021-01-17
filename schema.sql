@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS nodes (
     body TEXT,
-    id   TEXT GENERATED ALWAYS AS (json_extract(body, '$.id')) VIRTUAL NOT NULL
+    id   TEXT GENERATED ALWAYS AS (json_extract(body, '$.id')) VIRTUAL NOT NULL UNIQUE
 );
 
 CREATE INDEX IF NOT EXISTS id_idx ON nodes(id);
