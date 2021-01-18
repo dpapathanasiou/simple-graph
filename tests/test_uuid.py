@@ -71,5 +71,3 @@ def test_uuid():
     dotstr = db.get_dot(db_path, path=ids)
     print("!", dotstr)
 
-
-    assert 1==2
