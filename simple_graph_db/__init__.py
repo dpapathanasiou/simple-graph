@@ -314,6 +314,38 @@ class Database():
 
         return _find_nodes
 
+    def get_all_nodes(self):
+        """get all nodes
+
+        :return: list of node data
+        """
+        def _find_nodes(cursor):
+            return self._parse_search_results(
+                cursor.execute("SELECT body FROM nodes").fetchall())
+
+        return self.atomic(_find_nodes)
+
+    def get_all_node_ids(self):
+        """get all node id's
+
+        :return: list of ids
+        """
+        def _find_nodes(cursor):
+            return self._parse_search_results(
+                cursor.execute("SELECT id FROM nodes").fetchall())
+
+        return self.atomic(_find_nodes)
+
+    def get_all_edges(self):
+        """get all edges
+
+        :return: list of edge data
+        """
+        def _find_neighbors(cursor):
+            return cursor.execute("SELECT * FROM edges").fetchall()
+
+        return self.atomic(_find_neighbors)
+
     def find_neighbors(self, identifier):
         """find_neighbors
 
@@ -558,7 +590,7 @@ class Database():
             dots.append("digraph {\n")
             for node in [self.atomic(self.__find_node(i)) for i in path]:
                 dots.append(self._as_dot_node(node, exclude_node_keys, hide_node_key, node_kv))
-                src = node.get("uuid")
+                src = node.get("id")
                 if src is not None:
                     for src, tgt, inbound in self.atomic(self.__get_source_connections(src)):
                         dots.append(self._as_dot_edge(src, tgt, {}, exclude_edge_keys, hide_edge_key, edge_kv))
