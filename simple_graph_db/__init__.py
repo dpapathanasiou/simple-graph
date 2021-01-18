@@ -82,7 +82,13 @@ class Database():
         """
         cursor.execute("INSERT INTO nodes VALUES(json(?))", (json.dumps(self._set_id(identifier, data)),))
 
-    def add_node(self, data=None, identifier=None):
+    def add_node(self, identifier=None, data=None):
+        """add_node
+
+        :param data:
+        :param identifier:
+        :return:
+        """
         if data is None:
             data = {}
         if identifier is None:
@@ -90,7 +96,7 @@ class Database():
         return self.atomic(self.__add_node(data=data, identifier=identifier))
 
     def __add_node(self, data, identifier=None):
-        """
+        """__add_node
 
         :param data:
         :param identifier:
@@ -100,8 +106,22 @@ class Database():
             self._insert_node(cursor, identifier, data)
         return _add_node
 
-    def upsert_node(self, identifier, data):
+
+    def upsert_node(self, identifier=None, data=None):
+        """upsert_node
+
+        :param identifier:
+        :param data:
+        :return:
         """
+        if data is None:
+            data = {}
+        if identifier is None:
+            identifier = uuid.uuid4().hex
+        self.__upsert_node(identifier, data)
+
+    def __upsert_node(self, identifier, data):
+        """upsert_node
 
         :param identifier:
         :param data:
@@ -119,7 +139,7 @@ class Database():
         return _upsert_node
 
     def connect_nodes(self, source_id, target_id, properties={}):
-        """
+        """connect_nodes
 
         :param source_id:
         :param target_id:
@@ -129,7 +149,7 @@ class Database():
         return self.atomic(self.__connect_nodes(source_id, target_id, properties))
 
     def __connect_nodes(self, source_id, target_id, properties={}):
-        """
+        """__connect_nodes
 
         :param source_id:
         :param target_id:
@@ -141,7 +161,15 @@ class Database():
         return _connect_nodes
 
     def remove_node(self, identifier):
+        """remove_node('4480c7fcbffe4f6aa8db0b8e68d1f36f')
+
+        :param identifier:
+        :return:
         """
+        return self.atomic(self.__remove_node(identifier))
+
+    def __remove_node(self, identifier):
+        """__remove_node
 
         :param identifier:
         :return:
@@ -152,7 +180,7 @@ class Database():
         return _remove_node
 
     def _parse_search_results(self, results, idx=0):
-        """
+        """_parse_search_results
 
         :param results:
         :param idx:
@@ -175,7 +203,7 @@ class Database():
         return self.atomic(self.__find_node(identifier))
 
     def __find_node(self, identifier):
-        """
+        """__find_node
 
         :param identifier:
         :return:
@@ -206,7 +234,7 @@ class Database():
         return self._search_where(properties, 'LIKE')
 
     def _search_equals(self, properties):
-        """
+        """_search_equals
 
         :param properties:
         :return:
@@ -270,7 +298,7 @@ class Database():
         return _find_neighbors
 
     def find_outbound_neighbors(self, identifier):
-        """
+        """find_outbound_neighbors
 
         :param identifier:
         :return:
@@ -280,7 +308,7 @@ class Database():
         return _find_outbound_neighbors
 
     def find_inbound_neighbors(self, identifier):
-        """
+        """find_inbound_neighbors
 
         :param identifier:
         :return:
@@ -290,7 +318,7 @@ class Database():
         return _find_inbound_neighbors
 
     def _get_edge_sources(self, results):
-        """
+        """_get_edge_sources
 
         :param results:
         :return:
@@ -298,7 +326,7 @@ class Database():
         return self._parse_search_results(results, 0)
 
     def _get_edge_targets(self, results):
-        """
+        """_get_edge_targets
 
         :param results:
         :return:
@@ -306,7 +334,7 @@ class Database():
         return self._parse_search_results(results, 1)
 
     def _get_edge_properties(self, results):
-        """
+        """_get_edge_properties
 
         :param results:
         :return:
@@ -314,7 +342,7 @@ class Database():
         return self._parse_search_results(results, 2)
 
     def traverse (self, src, tgt=None, neighbors_fn=__find_neighbors):
-        """
+        """traverse
 
         :param src:
         :param tgt:
@@ -341,7 +369,7 @@ class Database():
         return self.atomic(_depth_first_search)
 
     def __get_connections(self, source_id, target_id):
-        """
+        """__get_connections
 
         :param source_id:
         :param target_id:
@@ -352,7 +380,7 @@ class Database():
         return _get_connections
 
     def __get_source_connections(self, source_id):
-        """
+        """__get_source_connections
 
         :param source_id:
         :return:
@@ -398,7 +426,7 @@ class Database():
         return f"[label=\"{values}\"]"
 
     def _as_dot_node(self, body, exclude_keys=[], hide_key_name=False, kv_separator=' '):
-        """
+        """_as_dot_node
 
         :param body:
         :param exclude_keys:
@@ -406,13 +434,15 @@ class Database():
         :param kv_separator:
         :return:
         """
-        name = body['id']
+        name = body.get('id')
+        if name is None:
+            return '"?"'
         exclude_keys.append('id')
         label = self._as_dot_label(body, exclude_keys, hide_key_name, kv_separator)
         return f'"{name}" {label};\n'
 
     def _as_dot_edge(self, src, tgt, body, exclude_keys=[], hide_key_name=False, kv_separator=' '):
-        """
+        """_as_dot_edge
 
         :param tgt:
         :param body:
@@ -468,16 +498,17 @@ class Database():
         :param exclude_edge_keys:
         :param hide_edge_key:
         :param edge_kv:
-        :return:
+        :return: dot_str
         """
         def _visualize(cursor):
             dots = []
             dots.append("digraph {\n")
             for node in [self.atomic(self.__find_node(i)) for i in path]:
                 dots.append(self._as_dot_node(node, exclude_node_keys, hide_node_key, node_kv))
-                src = node["uuid"]
-                for src, tgt, inbound in self.atomic(self.__get_source_connections(src)):
-                    dots.append(self._as_dot_edge(src, tgt, {}, exclude_edge_keys, hide_edge_key, edge_kv))
+                src = node.get("uuid")
+                if src is not None:
+                    for src, tgt, inbound in self.atomic(self.__get_source_connections(src)):
+                        dots.append(self._as_dot_edge(src, tgt, {}, exclude_edge_keys, hide_edge_key, edge_kv))
             dots.append("}\n")
             if dot_file is not None:
                 with open(dot_file, 'w') as fh:
