@@ -1,0 +1,12 @@
+
+# Include the README
+include *.md
+include simple_graph_db/*.sql
+
+
+# Include the license file
+include LICENSE
+
+
+# Include the data files
+#recursive-include data *
