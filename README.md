@@ -24,7 +24,9 @@ The [schema](schema.sql) consists of just two structures:
 
 * [SQLite](https://www.sqlite.org/), version 3.31.0 or higher; get the latest source or precompiled binaries from the [SQLite Download Page](https://www.sqlite.org/download.html) 
 * [Python](https://www.python.org/)
-* [Graphviz](https://graphviz.org/) optional, for visualization
+* [Graphviz](https://graphviz.org/) for visualization
+  -  install ([download page](https://www.graphviz.org/download/), [installation procedure for Windows](https://forum.graphviz.org/t/new-simplified-installation-procedure-on-windows/224)]); and
+  - `pip install graphviz`
 
 ## Basic Functions
 
@@ -92,17 +94,13 @@ Paths through the graph can be discovered with a starting node id, and an option
 [5, 1, 4, 3, 2]
 ```
 
-Any path or list of nodes can rendered graphically by using the `visualize` function. This command produces [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz:
+Any path or list of nodes can rendered graphically by using the `visualize` function. This command produces [dot](https://graphviz.org/doc/info/lang.html) files, which are also rendered as images with Graphviz:
 
 ```
 >>> db.visualize(apple, 'apple.dot', [4, 1, 5])
 ```
 
-The resuling file can produce a [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics) image, using this command line instruction:
-
-```sh
-dot -Tpng apple.dot -o apple.png
-```
+The resulting text file also comes with an associated image (the default is [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics), but that can be changed by supplying a different value to the `format` parameter)
 
 The default options include every key/value pair (excluding the id) in the node and edge objects:
 
