@@ -25,6 +25,8 @@ class Database():
 
     """
 
+    SCHEMA_FILE = 'schema.sql'
+
     def __init__(self, db_file, **kwargs):
         """A simple graph database
 
@@ -32,6 +34,7 @@ class Database():
         """
 
         self.db_file = db_file
+        print(kwargs.get("schema_file"))
         self.initialize(kwargs.get("schema_file"))
 
     def __str__(self):
@@ -68,14 +71,15 @@ class Database():
         :return:
         """
         if schema_file is None:
-            schema_file = os.path.join(modulepath, 'schema.sql')
+            schema_file = os.path.join(modulepath, self.SCHEMA_FILE)
         elif schema_file is not None and not os.path.exists(schema_file):
             schema_file_ = os.path.join(modulepath, schema_file)
             if os.path.exists(schema_file_):
                 schema_file = schema_file_
         else:
             raise SimpleGraphException(f"schema_file '{schema_file}' is not available")
-        logging.debug("use schema_file '{schema_file}'")
+        logging.debug(f"use schema_file '{schema_file}'")
+        print(f"use schema_file '{schema_file}'", self.SCHEMA_FILE)
 
         def _init(cursor):
             with open(schema_file) as f:

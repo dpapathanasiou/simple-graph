@@ -39,7 +39,7 @@ def test_database():
     if os.path.exists(db_file):
         os.remove(db_file)
 
-    db = Database(db_file="/tmp/simple_graph_db.sqlite", schema_file='schema_childs.sql')
+    db = Database(db_file=db_file, schema_file='schema_childs.sql')
     print(db)
 
     uid = "e59e12cca729483f969ad1feb1b1d17e"
@@ -58,6 +58,8 @@ def test_database():
 
     db.find_nodes({"b":1})
 
+    find_neighbors = db.find_neighbors(uid)
+    print(find_neighbors)
 
 def test_uuid():
     nodes = []
@@ -73,11 +75,11 @@ def test_uuid():
     print(nodes)
 
 
-    db_file = "/tmp/test_uuid.sqlite"
+    db_file = "/tmp/test_uuid_child.sqlite"
     if os.path.exists(db_file):
         os.remove(db_file)
 
-    db = Database(db_file="/tmp/simple_graph_db.sqlite", schema_file='schema_childs.sql')
+    db = Database(db_file=db_file)
     print(db)
 
     for node in nodes:
@@ -96,8 +98,10 @@ def test_uuid():
     print(ids)
 
     db.connect_nodes(n0.uuid, n01.uuid, {'con': 1})
+    db.connect_nodes(n01.uuid, n011.uuid, {'con': 2})
+    db.connect_nodes(n01.uuid, n012.uuid, {'con': 3}, edge_type="link")
 
-    dotstr = db.get_dot(db_file, path=ids)
+    # dotstr = db.get_dot(db_file, path=ids)
     # print("!", dotstr)
 
     find_neighbors = db.find_neighbors(n01.uuid)

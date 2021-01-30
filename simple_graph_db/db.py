@@ -20,6 +20,8 @@ class Database(Database0):
 
     """
 
+    SCHEMA_FILE = 'schema_childs.sql'
+
     def __init__(self, db_file, **kwargs):
         """A simple graph database
 
@@ -36,6 +38,9 @@ class Database(Database0):
         :param properties:
         :return:
         """
+
+        if edge_type is None:
+            edge_type = "edge"
         return self.atomic(self.__connect_nodes(source_id, target_id, properties=properties, edge_type=edge_type))
 
     def __connect_nodes(self, source_id, target_id, properties={}, edge_type=None):
@@ -86,3 +91,16 @@ class Database(Database0):
             return "".join(dots)
 
         return self.atomic(_visualize)
+
+    def __find_neighbors(self, identifier):
+        """find_neighbors
+
+        :param identifier:
+        :return:
+        """
+
+        def _find_neighbors(cursor):
+            return cursor.execute("SELECT * FROM edges WHERE source = ? OR target = ?",
+                                  (identifier, identifier,)).fetchall()
+
+        return _find_neighbors
