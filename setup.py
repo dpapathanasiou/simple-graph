@@ -16,7 +16,7 @@ REQUIRES = []
 setup(
     name='simple_graph_db',
     version=version,
-    description='This is a simple graph database in SQLite, inspired by "SQLite as a document database".',
+    description='This is a pure python graph database in SQLite, inspired by "SQLite as a document database".',
     long_description=readme,
     long_description_content_type="text/markdown",
     author="Denis Papathanasiou",
