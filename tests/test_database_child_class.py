@@ -5,10 +5,9 @@ import uuid
 import copy
 
 modulepath = os.path.dirname(__file__)
-
 sys.path.insert(0, os.path.join(modulepath, "..", ))
 
-from simple_graph_db import Database
+from simple_graph_db.db import Database
 
 class Node():
     def __init__(self, name="N.N."):
@@ -35,7 +34,32 @@ class Node():
 
     __repr__ = __str__
 
-def atest_uuid():
+def test_database():
+    db_file = "/tmp/simple_graph_db.sqlite"
+    if os.path.exists(db_file):
+        os.remove(db_file)
+
+    db = Database(db_file="/tmp/simple_graph_db.sqlite", schema_file='schema_childs.sql')
+    print(db)
+
+    uid = "e59e12cca729483f969ad1feb1b1d17e"
+    db.add_node(data={"a":1}, identifier=uid)
+    ruid = db.find_node(uid)
+    print(ruid)
+    assert ruid.get("id") == uid
+
+    uid2 = "afeeb876a7524c9f8f86af73e95f3785"
+    db.add_node(data={"b":1}, identifier=uid2)
+    ruid2 = db.find_node(uid2)
+    print(ruid2)
+    assert ruid2.get("b") == 1
+
+    db.connect_nodes(uid, uid2, {"con":1})
+
+    db.find_nodes({"b":1})
+
+
+def test_uuid():
     nodes = []
 
     n0 = Node("n0")
@@ -52,15 +76,18 @@ def atest_uuid():
     db_file = "/tmp/test_uuid.sqlite"
     if os.path.exists(db_file):
         os.remove(db_file)
-    db = Database(db_file=db_file)
-    for node in nodes:
-        db.atomic(db_file, db.add_node(node.data, node.uuid))
 
-    rn0 = db.atomic(db_file, db.find_node(n0.uuid))
+    db = Database(db_file="/tmp/simple_graph_db.sqlite", schema_file='schema_childs.sql')
+    print(db)
+
+    for node in nodes:
+        db.add_node(node.uuid, node.data)
+
+    rn0 = db.find_node(n0.uuid)
     print(rn0)
     assert n0.uuid == rn0.get("uuid")
 
-    rn011 = db.atomic(db_file, db.find_node(n011.uuid))
+    rn011 = db.find_node(n011.uuid)
     print(rn011)
     assert n011.uuid == rn011.get("uuid")
     assert n011.parent == rn011.get("!parent")
@@ -68,6 +95,10 @@ def atest_uuid():
     ids = [n.uuid for n in nodes]
     print(ids)
 
-    dotstr = db.get_dot(db_file, path=ids)
-    print("!", dotstr)
+    db.connect_nodes(n0.uuid, n01.uuid, {'con': 1})
 
+    dotstr = db.get_dot(db_file, path=ids)
+    # print("!", dotstr)
+
+    find_neighbors = db.find_neighbors(n01.uuid)
+    print(find_neighbors)

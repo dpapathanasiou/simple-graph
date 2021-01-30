@@ -69,6 +69,13 @@ class Database():
         """
         if schema_file is None:
             schema_file = os.path.join(modulepath, 'schema.sql')
+        elif schema_file is not None and not os.path.exists(schema_file):
+            schema_file_ = os.path.join(modulepath, schema_file)
+            if os.path.exists(schema_file_):
+                schema_file = schema_file_
+        else:
+            raise SimpleGraphException(f"schema_file '{schema_file}' is not available")
+        logging.debug("use schema_file '{schema_file}'")
 
         def _init(cursor):
             with open(schema_file) as f:
