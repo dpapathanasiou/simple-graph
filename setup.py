@@ -1,5 +1,5 @@
 import setuptools
-from pip.req import parse_requirements
+from pip._internal.req import parse_requirements
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
