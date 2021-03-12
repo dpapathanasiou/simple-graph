@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="simple-graph", # Replace with your own username
-    version="0.0.1",
+    version="1.0.1",
     author="Denis Papathanasiou",
     author_email="denis@papathanasiou.org",
     description='This is a simple graph database in SQLite, inspired by "SQLite as a document database"',
