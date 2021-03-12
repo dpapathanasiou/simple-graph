@@ -1,4 +1,5 @@
 import setuptools
+from pip.req import parse_requirements
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -9,7 +10,7 @@ setuptools.setup(
     author="Denis Papathanasiou",
     author_email="denis@papathanasiou.org",
     description='This is a simple graph database in SQLite, inspired by "SQLite as a document database"',
-    install_reqs = setuptools.parse_requirements('requirements.txt'),
+    install_reqs = parse_requirements('requirements.txt'),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/dpapathanasiou/simple-graph",
