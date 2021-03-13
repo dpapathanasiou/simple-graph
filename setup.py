@@ -5,19 +5,19 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="simple-graph", # Replace with your own username
+    name="simple-graph",  # Replace with your own username
     version="1.0.1",
     author="Denis Papathanasiou",
     author_email="denis@papathanasiou.org",
     description='This is a simple graph database in SQLite, inspired by "SQLite as a document database"',
-    entry_points='''
+    entry_points="""
         [console_scripts]
         simple_graph=simple_graph:cli
-    ''',
-    install_reqs = parse_requirements('requirements.txt',session=False),
+    """,
+    install_reqs=parse_requirements("requirements.txt", session=False),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    py_modules=['simple_graph'],
+    py_modules=["simple_graph"],
     url="https://github.com/dpapathanasiou/simple-graph",
     project_urls={
         "Bug Tracker": "https://github.com/dpapathanasiou/simple-graph/issues",
