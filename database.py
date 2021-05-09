@@ -15,6 +15,11 @@ from functools import lru_cache
 from itertools import tee
 from graphviz import Digraph
 
+@lru_cache(maxsize=None)
+def read_sql(sql_file):
+    with open(sql_file) as f:
+        return f.read()
+
 def atomic(db_file, cursor_exec_fn):
     connection = sqlite3.connect(db_file)
     cursor = connection.cursor()
@@ -26,9 +31,7 @@ def atomic(db_file, cursor_exec_fn):
 
 def initialize(db_file, schema_file='schema.sql'):
     def _init(cursor):
-        with open(schema_file) as f:
-            for statement in f.read().split(';'):
-                cursor.execute(statement)
+        cursor.executescript(read_sql(schema_file))
     return atomic(db_file, _init)
 
 def _set_id(identifier, data):
@@ -101,19 +104,14 @@ def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
         return _parse_search_results(cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall())
     return _find_nodes
 
-@lru_cache(maxsize=None)
-def get_traversal(cte_file):
-    with open(cte_file) as f:
-        return f.read()
-
 def find_neighbors():
-    return get_traversal('traverse.sql')
+    return read_sql('traverse.sql')
 
 def find_outbound_neighbors():
-    return get_traversal('traverse-outbound.sql')
+    return read_sql('traverse-outbound.sql')
 
 def find_inbound_neighbors():
-    return get_traversal('traverse-inbound.sql')
+    return read_sql('traverse-inbound.sql')
 
 def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
