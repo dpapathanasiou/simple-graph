@@ -11,13 +11,14 @@ using an atomic transaction wrapper function.
 
 import sqlite3
 import json
+import pathlib
 from functools import lru_cache
 from itertools import tee
 from graphviz import Digraph
 
 @lru_cache(maxsize=None)
 def read_sql(sql_file):
-    with open(sql_file) as f:
+    with open(pathlib.Path.cwd() / "sql" / sql_file) as f:
         return f.read()
 
 def atomic(db_file, cursor_exec_fn):
@@ -40,7 +41,7 @@ def _set_id(identifier, data):
     return data
 
 def _insert_node(cursor, identifier, data):
-    cursor.execute("INSERT INTO nodes VALUES(json(?))", (json.dumps(_set_id(identifier, data)),))
+    cursor.execute(read_sql('insert-node.sql'), (json.dumps(_set_id(identifier, data)),))
 
 def add_node(data, identifier=None):
     def _add_node(cursor):
@@ -56,18 +57,18 @@ def upsert_node(identifier, data):
         else:
             # merge the current and new data and update
             updated_data = {**current_data, **data}
-            cursor.execute("UPDATE nodes SET body = json(?) WHERE id = ?", (json.dumps(_set_id(identifier, updated_data)), identifier,))
+            cursor.execute(read_sql('update-node.sql'), (json.dumps(_set_id(identifier, updated_data)), identifier,))
     return _upsert_node
 
 def connect_nodes(source_id, target_id, properties={}):
     def _connect_nodes(cursor):
-        cursor.execute("INSERT INTO edges VALUES(?, ?, json(?))", (source_id, target_id, json.dumps(properties),))
+        cursor.execute(read_sql('insert-edge.sql'), (source_id, target_id, json.dumps(properties),))
     return _connect_nodes
 
 def remove_node(identifier):
     def _remove_node(cursor):
-        cursor.execute("DELETE FROM edges WHERE source = ? OR target = ?", (identifier, identifier,))
-        cursor.execute("DELETE FROM nodes WHERE id = ?", (identifier,))
+        cursor.execute(read_sql('delete-edge.sql'), (identifier, identifier,))
+        cursor.execute(read_sql('delete-node.sql'), (identifier,))
     return _remove_node
 
 def _parse_search_results(results, idx=0):
@@ -78,7 +79,7 @@ def _get_edge_properties(results):
 
 def find_node(identifier):
     def _find_node(cursor):
-        results = cursor.execute("SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?", (identifier,)).fetchall()
+        results = cursor.execute(read_sql('search-node-by-id.sql'), (identifier,)).fetchall()
         if len(results) == 1:
             return _parse_search_results(results).pop()
         return {}
@@ -101,7 +102,7 @@ def _search_contains(properties):
 
 def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
     def _find_nodes(cursor):
-        return _parse_search_results(cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall())
+        return _parse_search_results(cursor.execute(read_sql('search-node.sql') + "{}".format(where_fn(data)), search_fn(data)).fetchall())
     return _find_nodes
 
 def find_neighbors():
@@ -129,7 +130,7 @@ def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
 
 def get_connections(source_id, target_id):
     def _get_connections(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE source = ? AND target = ?", (source_id, target_id,)).fetchall()
+        return cursor.execute(read_sql('search-edges.sql'), (source_id, target_id,)).fetchall()
     return _get_connections
 
 def pairwise(iterable):

@@ -1,0 +1,1 @@
+INSERT INTO edges VALUES(?, ?, json(?))

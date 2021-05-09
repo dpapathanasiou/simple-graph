@@ -1,0 +1,1 @@
+UPDATE nodes SET body = json(?) WHERE id = ?
