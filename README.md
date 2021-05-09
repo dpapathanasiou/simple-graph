@@ -83,7 +83,7 @@ Paths through the graph can be discovered with a starting node id, and an option
 
 ```
 >>> db.traverse(apple, 2, 3)
-['2', '1', '3', '4', '5']
+['2', '1', '3']
 >>> db.traverse(apple, 4, 5)
 ['4', '1', '2', '3', '5']
 >>> db.traverse(apple, 5, neighbors_fn=db.find_inbound_neighbors)
