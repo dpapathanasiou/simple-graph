@@ -11,6 +11,7 @@ using an atomic transaction wrapper function.
 
 import sqlite3
 import json
+from functools import lru_cache
 from itertools import tee
 from graphviz import Digraph
 
@@ -69,6 +70,9 @@ def remove_node(identifier):
 def _parse_search_results(results, idx=0):
     return [json.loads(item[idx]) for item in results]
 
+def _get_edge_properties(results):
+    return _parse_search_results(results, 2)
+
 def find_node(identifier):
     def _find_node(cursor):
         results = cursor.execute("SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?", (identifier,)).fetchall()
@@ -97,49 +101,33 @@ def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
         return _parse_search_results(cursor.execute("SELECT body FROM nodes WHERE {}".format(where_fn(data)), search_fn(data)).fetchall())
     return _find_nodes
 
-def find_neighbors(identifier):
-    def _find_neighbors(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE source = ? OR target = ?", (identifier, identifier,)).fetchall()
-    return _find_neighbors
+@lru_cache(maxsize=None)
+def get_traversal(cte_file):
+    with open(cte_file) as f:
+        return f.read()
 
-def find_outbound_neighbors(identifier):
-    def _find_outbound_neighbors(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE source = ?", (identifier,)).fetchall()
-    return _find_outbound_neighbors
+def find_neighbors():
+    return get_traversal('traverse.sql')
 
-def find_inbound_neighbors(identifier):
-    def _find_inbound_neighbors(cursor):
-        return cursor.execute("SELECT * FROM edges WHERE target = ?", (identifier,)).fetchall()
-    return _find_inbound_neighbors
+def find_outbound_neighbors():
+    return get_traversal('traverse-outbound.sql')
 
-def _get_edge_sources(results):
-    return _parse_search_results(results, 0)
-
-def _get_edge_targets(results):
-    return _parse_search_results(results, 1)
-
-def _get_edge_properties(results):
-    return _parse_search_results(results, 2)
+def find_inbound_neighbors():
+    return get_traversal('traverse-inbound.sql')
 
 def traverse (db_file, src, tgt=None, neighbors_fn=find_neighbors):
-    def _depth_first_search(cursor):
+    def _traverse(cursor):
         path = []
-        queue = []
-        if atomic(db_file, find_node(src)):
-            queue.append(src)
-        while queue:
-            node = queue.pop()
-            if node not in path:
-                path.append(node)
-                if node == tgt:
+        target = json.dumps(tgt)
+        for row in cursor.execute(neighbors_fn(), (json.dumps(src,))):
+            if row:
+                identifier = row[0]
+                if identifier not in path:
+                    path.append(identifier)
+                if identifier == target:
                     break
-                neighbors = atomic(db_file, neighbors_fn(node))
-                for identifier in set(_get_edge_sources(neighbors)).union(_get_edge_targets(neighbors)):
-                    neighbor = atomic(db_file, find_node(identifier))
-                    if neighbor:
-                        queue.append(identifier)
         return path
-    return atomic(db_file, _depth_first_search)
+    return atomic(db_file, _traverse)
 
 def get_connections(source_id, target_id):
     def _get_connections(cursor):
