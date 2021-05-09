@@ -103,7 +103,7 @@ def find_node(identifier):
 
 
 def _search_where(properties, predicate='='):
-    return " AND ".join(["json_extract(body, '$.{}') {} ?".format(k, predicate) for k in properties.keys()])
+    return " AND ".join([f"json_extract(body, '$.{key}') {predicate} ?" for key in properties.keys()])
 
 
 def _search_like(properties):
