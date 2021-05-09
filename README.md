@@ -83,15 +83,15 @@ Paths through the graph can be discovered with a starting node id, and an option
 
 ```
 >>> db.traverse(apple, 2, 3)
-[2, 3]
+['2', '1', '3', '4', '5']
 >>> db.traverse(apple, 4, 5)
-[4, 1, 5]
+['4', '1', '2', '3', '5']
 >>> db.traverse(apple, 5, neighbors_fn=db.find_inbound_neighbors)
-[5]
+['5']
 >>> db.traverse(apple, 5, neighbors_fn=db.find_outbound_neighbors)
-[5, 1, 4]
+['5', '1', '4']
 >>> db.traverse(apple, 5, neighbors_fn=db.find_neighbors)
-[5, 1, 4, 3, 2]
+['5', '1', '2', '3', '4']
 ```
 
 Any path or list of nodes can rendered graphically by using the `visualize` function. This command produces [dot](https://graphviz.org/doc/info/lang.html) files, which are also rendered as images with Graphviz:
