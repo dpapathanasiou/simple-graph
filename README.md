@@ -4,10 +4,16 @@ This is a simple [graph database](https://en.wikipedia.org/wiki/Graph_database) 
 
 # Structure
 
-The [schema](schema.sql) consists of just two structures:
+The [schema](sql/schema.sql) consists of just two structures:
 
 * Nodes - these are any [json](https://www.json.org/) objects, with the only constraint being that they each contain a unique `id` value 
 * Edges - these are pairs of node `id` values, specifying the direction, with an optional json object as connection properties
+
+There are also traversal functions as native SQLite [Common Table Expressions](https://www.sqlite.org/lang_with.html):
+
+* [Both directions](sql/traverse.sql)
+* [Inbound](sql/traverse-inbound.sql)
+* [Outbound](sql/traverse-outbound.sql)
 
 # Applications
 
@@ -30,7 +36,9 @@ The [schema](schema.sql) consists of just two structures:
 
 ## Basic Functions
 
-The python [database script](database.py) provides convenience functions for [atomic transactions](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) to add, delete, connect, and search for nodes.
+While [this database script](database.py) was written in python, the [schema and prepared sql statements](sql) can be read and used by programs in *any* programming language with [SQLite bindings](https://en.wikipedia.org/wiki/SQLite#Programming_language_support).
+
+The database script provides convenience functions for [atomic transactions](https://en.wikipedia.org/wiki/Atomicity_(database_systems)) to add, delete, connect, and search for nodes.
 
 Any single node or path of nodes can also be depicted graphically by using the `visualize` function within the database script to generate [dot](https://graphviz.org/doc/info/lang.html) files, which in turn can be converted to images with Graphviz. 
 
