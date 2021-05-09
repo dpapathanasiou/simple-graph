@@ -124,7 +124,7 @@ def _search_contains(properties):
 
 def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
     def _find_nodes(cursor):
-        return _parse_search_results(cursor.execute(read_sql('search-node.sql') + "{}".format(where_fn(data)), search_fn(data)).fetchall())
+        return _parse_search_results(cursor.execute(read_sql('search-node.sql') + where_fn(data), search_fn(data)).fetchall())
     return _find_nodes
 
 
