@@ -1,1 +1,3 @@
-SELECT * FROM edges WHERE source = ? AND target = ?
+SELECT * FROM edges WHERE source = ? 
+UNION
+SELECT * FROM edges WHERE target = ?
