@@ -18,7 +18,7 @@ from graphviz import Digraph
 
 @lru_cache(maxsize=None)
 def read_sql(sql_file):
-    with open(pathlib.Path.cwd() / "sql" / sql_file) as f:
+    with open(pathlib.Path.cwd() / ".." / "sql" / sql_file) as f:
         return f.read()
 
 
