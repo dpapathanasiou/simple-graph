@@ -1,5 +1,5 @@
 # do not check-in the results of the './go/generate-constants.sh' script
-go/src/constants/constants.go
+go/src/simpledb/constants.go
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,python,go
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,python,go
