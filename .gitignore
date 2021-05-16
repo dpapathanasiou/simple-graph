@@ -1,5 +1,26 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,macos,linux,windows
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,macos,linux,windows
+# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,python,go
+# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,python,go
+
+### Go ###
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+### Go Patch ###
+/vendor/
+/Godeps/
 
 ### Linux ###
 *~
@@ -52,7 +73,6 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
 
 # Distribution / packaging
 .Python
@@ -62,8 +82,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -141,6 +159,9 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
+# poetry
+#poetry.lock
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow
 __pypackages__/
 
@@ -152,8 +173,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.venv
+# .env
+.env/
+.venv/
 env/
 venv/
 ENV/
@@ -182,12 +204,18 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 
+# operating system-related files
+# file properties cache/storage on macOS
+*.DS_Store
+# thumbnail cache on Windows
+Thumbs.db
+
 # profiling data
 .prof
 
+
 ### Windows ###
 # Windows thumbnail cache files
-Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
@@ -211,4 +239,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/python,macos,linux,windows
+# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,python,go
