@@ -1,0 +1,4 @@
+{
+    "go.buildTags": "json1",
+    "go.testTags": "json1"
+}
