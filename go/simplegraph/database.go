@@ -1,6 +1,7 @@
 package simplegraph
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -53,4 +54,37 @@ func Initialize(database ...string) {
 	evaluate(dbErr)
 	defer db.Close()
 	init(db)
+}
+
+func insert(node string, database ...string) int64 {
+	ins := func(db *sql.DB) (sql.Result, error) {
+		stmt, stmtErr := db.Prepare(InsertNode)
+		evaluate(stmtErr)
+		return stmt.Exec(node)
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	in, inErr := ins(db)
+	evaluate(inErr)
+	rows, rowsErr := in.RowsAffected()
+	evaluate(rowsErr)
+	return rows
+}
+
+func AddNodeAndId(node []byte, identifier string, database ...string) int64 {
+	closingBraceIdx := bytes.LastIndexByte(node, '}')
+	if closingBraceIdx > 0 {
+		addId := []byte(fmt.Sprintf(", \"id\": %q", identifier))
+		node = append(node[:closingBraceIdx], addId...)
+		node = append(node, '}')
+	}
+	return insert(string(node), database...)
+}
+
+func AddNode(node []byte, database ...string) int64 {
+	return insert(string(node), database...)
 }
