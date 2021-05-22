@@ -1,6 +1,7 @@
 package simplegraph
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -22,7 +23,7 @@ func TestResolveDbFileReference(t *testing.T) {
 		t.Errorf("resolveDbFileReference(\"/tmp\", \"database.sqlite\") = %q but expected %q", actualPath, path)
 	}
 	if actualPathErr != nil {
-		t.Errorf("resolveDbFileReference(\"/tmp\", \"database.sqlite\") = %q but expected nil", actualPathErr)
+		t.Errorf("resolveDbFileReference(\"/tmp\", \"database.sqlite\") = %q but expected nil", actualPathErr.Error())
 	}
 
 	file := "database.sqlite?_foreign_keys=true"
@@ -31,7 +32,7 @@ func TestResolveDbFileReference(t *testing.T) {
 		t.Errorf("resolveDbFileReference(\"database.sqlite\") = %q but expected %q", actualFile, file)
 	}
 	if actualFileErr != nil {
-		t.Errorf("resolveDbFileReference(\"database.sqlite\") = %q but expected nil", actualFileErr)
+		t.Errorf("resolveDbFileReference(\"database.sqlite\") = %q but expected nil", actualFileErr.Error())
 	}
 
 	empty := "invalid database file reference"
@@ -41,5 +42,19 @@ func TestResolveDbFileReference(t *testing.T) {
 	}
 	if !ErrorMatches(emptyFileErr, empty) {
 		t.Errorf("resolveDbFileReference() = %q but expected %q", emptyFileErr.Error(), empty)
+	}
+}
+
+func TestInitialize(t *testing.T) {
+	file := "testdb.sqlite3"
+	Initialize(file)
+	defer os.Remove(file)
+
+	fs, fsErr := os.Lstat(file)
+	if fs.Name() != file {
+		t.Errorf("Initialize() produced %q but expected %q", fs.Name(), file)
+	}
+	if fsErr != nil {
+		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
 	}
 }
