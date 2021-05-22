@@ -1,8 +1,8 @@
 # do not check-in the results of the './go/generate-constants.sh' script
 go/simplegraph/constants.go
 
-# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,python,go
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,python,go
+# Created by https://www.toptal.com/developers/gitignore/api/go,linux,macos,python,windows,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=go,linux,macos,python,windows,visualstudiocode
 
 ### Go ###
 # Binaries for programs and plugins
@@ -217,6 +217,19 @@ Thumbs.db
 .prof
 
 
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db:encryptable
@@ -242,4 +255,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,python,go
+# End of https://www.toptal.com/developers/gitignore/api/go,linux,macos,python,windows,visualstudiocode
