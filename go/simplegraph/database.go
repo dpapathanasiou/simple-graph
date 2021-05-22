@@ -122,7 +122,7 @@ func RemoveNode(identifier string, database ...string) bool {
 		evaluate(txErr)
 
 		var err error
-		_, err = tx.Stmt(edgeStmt).Exec(identifier)
+		_, err = tx.Stmt(edgeStmt).Exec(identifier, identifier)
 		if err != nil {
 			tx.Rollback()
 			return false
