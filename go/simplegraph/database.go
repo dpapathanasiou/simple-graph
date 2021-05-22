@@ -111,3 +111,35 @@ func ConnectNodesWithProperties(sourceId string, targetId string, properties []b
 func ConnectNodes(sourceId string, targetId string, database ...string) int64 {
 	return ConnectNodesWithProperties(sourceId, targetId, []byte(`{}`), database...)
 }
+
+func RemoveNode(identifier string, database ...string) bool {
+	delete := func(db *sql.DB) bool {
+		edgeStmt, edgeErr := db.Prepare(DeleteEdge)
+		evaluate(edgeErr)
+		nodeStmt, nodeErr := db.Prepare(DeleteNode)
+		evaluate(nodeErr)
+		tx, txErr := db.Begin()
+		evaluate(txErr)
+
+		var err error
+		_, err = tx.Stmt(edgeStmt).Exec(identifier)
+		if err != nil {
+			tx.Rollback()
+			return false
+		}
+		_, err = tx.Stmt(nodeStmt).Exec(identifier)
+		if err != nil {
+			tx.Rollback()
+			return false
+		}
+		tx.Commit()
+		return true
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	return delete(db)
+}
