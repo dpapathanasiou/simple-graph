@@ -88,3 +88,26 @@ func AddNodeAndId(node []byte, identifier string, database ...string) int64 {
 func AddNode(node []byte, database ...string) int64 {
 	return insert(string(node), database...)
 }
+
+func ConnectNodesWithProperties(sourceId string, targetId string, properties []byte, database ...string) int64 {
+	connect := func(db *sql.DB) (sql.Result, error) {
+		stmt, stmtErr := db.Prepare(InsertEdge)
+		evaluate(stmtErr)
+		return stmt.Exec(sourceId, targetId, string(properties))
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	cx, cxErr := connect(db)
+	evaluate(cxErr)
+	rows, rowsErr := cx.RowsAffected()
+	evaluate(rowsErr)
+	return rows
+}
+
+func ConnectNodes(sourceId string, targetId string, database ...string) int64 {
+	return ConnectNodesWithProperties(sourceId, targetId, []byte(`{}`), database...)
+}
