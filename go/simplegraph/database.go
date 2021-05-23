@@ -171,7 +171,7 @@ func FindNode(identifier string, database ...string) (string, error) {
 
 func generateWhereClauseForSearch(properties map[string]string, predicate string) string {
 	clauses := []string{}
-	for key, _ := range properties {
+	for key := range properties {
 		clause := strings.Builder{}
 		fmt.Fprintf(&clause, "json_extract(body, '$.%s') %s ?", key, predicate)
 		clauses = append(clauses, clause.String())
