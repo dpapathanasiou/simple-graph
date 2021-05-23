@@ -44,6 +44,15 @@ func TestResolveDbFileReference(t *testing.T) {
 	}
 }
 
+func arrayContains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
 func TestGenerateSearchStatement(t *testing.T) {
 	where := generateSearchEquals(map[string]string{"name": "Steve"})
 	single := "json_extract(body, '$.name') = ?"
@@ -71,23 +80,23 @@ func TestGenerateSearchStatement(t *testing.T) {
 	}
 
 	equality := []string{"Steve", "founder"}
-	for i, binding := range generateSearchBindings(props, false, false) {
-		if binding != equality[i] {
-			t.Errorf("generateSearchBindings() = %q but expected %q", binding, equality[i])
+	for _, binding := range generateSearchBindings(props, false, false) {
+		if !arrayContains(equality, binding) {
+			t.Errorf("generateSearchBindings() was missing %q", binding)
 		}
 	}
 
 	startsWith := []string{"Steve%", "founder%"}
-	for i, binding := range generateSearchBindings(props, true, false) {
-		if binding != startsWith[i] {
-			t.Errorf("generateSearchBindings() = %q but expected %q", binding, startsWith[i])
+	for _, binding := range generateSearchBindings(props, true, false) {
+		if !arrayContains(startsWith, binding) {
+			t.Errorf("generateSearchBindings() was missing %q", binding)
 		}
 	}
 
 	contains := []string{"%Steve%", "%founder%"}
-	for i, binding := range generateSearchBindings(props, false, true) {
-		if binding != contains[i] {
-			t.Errorf("generateSearchBindings() = %q but expected %q", binding, contains[i])
+	for _, binding := range generateSearchBindings(props, false, true) {
+		if !arrayContains(contains, binding) {
+			t.Errorf("generateSearchBindings() was missing %q", binding)
 		}
 	}
 }
@@ -152,20 +161,10 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	if err != nil {
 		t.Errorf("FindNodes() produced an error %s but expected nil", err.Error())
 	}
-	wozFound := false
-	jobsFound := false
-	for _, body := range nodes {
-		if body == woz {
-			wozFound = true
-		}
-		if body == jobs {
-			jobsFound = true
-		}
-	}
-	if !wozFound {
+	if !arrayContains(nodes, woz) {
 		t.Errorf("FindNodes() did not return %s as expected", woz)
 	}
-	if !jobsFound {
+	if !arrayContains(nodes, jobs) {
 		t.Errorf("FindNodes() did not return %s as expected", jobs)
 	}
 
