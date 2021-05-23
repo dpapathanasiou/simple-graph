@@ -29,7 +29,7 @@ There are also traversal functions as native SQLite [Common Table Expressions](h
 Choose an implementation:
 
 * [Python](python)
-* Go (coming soon)
+* [Go](go)
 
 Want to contribute a version in your preferred language?
 
