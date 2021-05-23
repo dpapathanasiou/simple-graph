@@ -148,9 +148,9 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 
-	nodes, errors := FindNodes(map[string]string{"name": "Steve"}, true, false, file)
-	if len(nodes) != len(errors) {
-		t.Errorf("FindNodes() node %d, errors %d but expected equal counts", len(nodes), len(errors))
+	nodes, err := FindNodes(map[string]string{"name": "Steve"}, true, false, file)
+	if err != nil {
+		t.Errorf("FindNodes() produced an error %s but expected nil", err.Error())
 	}
 	wozFound := false
 	jobsFound := false

@@ -221,7 +221,7 @@ func convertSearchBindingsToParameters(bindings []string) []interface{} {
 	return params
 }
 
-func FindNodes(properties map[string]string, startsWith bool, contains bool, database ...string) ([]string, []error) {
+func FindNodes(properties map[string]string, startsWith bool, contains bool, database ...string) ([]string, error) {
 	var statement string
 	if startsWith || contains {
 		statement = generateSearchStatement(properties, false)
@@ -230,18 +230,16 @@ func FindNodes(properties map[string]string, startsWith bool, contains bool, dat
 	}
 	bindings := generateSearchBindings(properties, startsWith, contains)
 
-	find := func(db *sql.DB) ([]string, []error) {
+	find := func(db *sql.DB) ([]string, error) {
 		stmt, stmtErr := db.Prepare(statement)
 		evaluate(stmtErr)
 		defer stmt.Close()
 
 		results := []string{}
-		errors := []error{}
 		rows, err := stmt.Query(convertSearchBindingsToParameters(bindings)...)
 		if err != nil {
 			results = append(results, "")
-			errors = append(errors, err)
-			return results, errors
+			return results, err
 		}
 		defer rows.Close()
 		for rows.Next() {
@@ -249,18 +247,15 @@ func FindNodes(properties map[string]string, startsWith bool, contains bool, dat
 			err = rows.Scan(&body)
 			if err != nil {
 				results = append(results, "")
-				errors = append(errors, err)
-				return results, errors
+				return results, err
 			}
 			results = append(results, body)
-			errors = append(errors, nil)
 		}
 		err = rows.Err()
 		if err != nil {
 			results = append(results, "")
-			errors = append(errors, err)
 		}
-		return results, errors
+		return results, err
 	}
 
 	dbReference, err := resolveDbFileReference(database...)
