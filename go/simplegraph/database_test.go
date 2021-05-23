@@ -63,19 +63,22 @@ func TestGenerateSearchStatement(t *testing.T) {
 	props := map[string]string{"name": "Steve", "type": "founder"}
 	where = generateSearchLike(props)
 	multiple := "json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
-	if where != multiple {
+	multipleReversed := "json_extract(body, '$.type') LIKE ? AND json_extract(body, '$.name') LIKE ?"
+	if where != multiple && where != multipleReversed {
 		t.Errorf("generateSearchLike() = %q but expected %q", where, multiple)
 	}
 
 	where = generateSearchStatement(props, true)
 	sql := "SELECT body FROM nodes WHERE json_extract(body, '$.name') = ? AND json_extract(body, '$.type') = ?"
-	if where != sql {
+	sqlReversed := "SELECT body FROM nodes WHERE json_extract(body, '$.type') = ? AND json_extract(body, '$.name') = ?"
+	if where != sql && where != sqlReversed {
 		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
 	}
 
 	where = generateSearchStatement(props, false)
 	sql = "SELECT body FROM nodes WHERE json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
-	if where != sql {
+	sqlReversed = "SELECT body FROM nodes WHERE json_extract(body, '$.type') LIKE ? AND json_extract(body, '$.name') LIKE ?"
+	if where != sql && where != sqlReversed {
 		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
 	}
 
