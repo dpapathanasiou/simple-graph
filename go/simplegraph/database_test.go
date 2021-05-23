@@ -44,6 +44,33 @@ func TestResolveDbFileReference(t *testing.T) {
 	}
 }
 
+func TestGenerateSearchStatement(t *testing.T) {
+	where := generateSearchEquals(map[string]string{"name": "Steve"})
+	single := "json_extract(body, '$.name') = ?"
+	if where != single {
+		t.Errorf("generateSearchEquals() = %q but expected %q", where, single)
+	}
+
+	props := map[string]string{"name": "Steve", "type": "founder"}
+	where = generateSearchLike(props)
+	multiple := "json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
+	if where != multiple {
+		t.Errorf("generateSearchLike() = %q but expected %q", where, multiple)
+	}
+
+	where = generateSearchStatement(props, true)
+	sql := "SELECT body FROM nodes WHERE json_extract(body, '$.name') = ? AND json_extract(body, '$.type') = ?"
+	if where != sql {
+		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
+	}
+
+	where = generateSearchStatement(props, false)
+	sql = "SELECT body FROM nodes WHERE json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
+	if where != sql {
+		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
+	}
+}
+
 func TestInitializeAndCrud(t *testing.T) {
 	file := "testdb.sqlite3"
 	Initialize(file)

@@ -168,3 +168,33 @@ func FindNode(identifier string, database ...string) (string, error) {
 	defer db.Close()
 	return find(db)
 }
+
+func generateWhereClauseForSearch(properties map[string]string, predicate string) string {
+	clauses := []string{}
+	for key, _ := range properties {
+		clause := strings.Builder{}
+		fmt.Fprintf(&clause, "json_extract(body, '$.%s') %s ?", key, predicate)
+		clauses = append(clauses, clause.String())
+	}
+	return strings.Join(clauses, " AND ")
+}
+
+func generateSearchEquals(properties map[string]string) string {
+	return generateWhereClauseForSearch(properties, "=")
+}
+
+func generateSearchLike(properties map[string]string) string {
+	return generateWhereClauseForSearch(properties, "LIKE")
+}
+
+func generateSearchStatement(properties map[string]string, equality bool) string {
+	clause := strings.Builder{}
+	var where string
+	if equality {
+		where = generateSearchEquals(properties)
+	} else {
+		where = generateSearchLike(properties)
+	}
+	fmt.Fprintf(&clause, "%s %s", strings.TrimSpace(SearchNode), where)
+	return clause.String()
+}
