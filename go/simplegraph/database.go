@@ -144,15 +144,18 @@ func RemoveNode(identifier string, database ...string) bool {
 	return delete(db)
 }
 
-func FindNode(identifier string, database ...string) string {
-	find := func(db *sql.DB) string {
+func FindNode(identifier string, database ...string) (string, error) {
+	find := func(db *sql.DB) (string, error) {
 		stmt, err := db.Prepare(SearchNodeById)
 		evaluate(err)
 		defer stmt.Close()
 		var body string
 		err = stmt.QueryRow(identifier).Scan(&body)
+		if err == sql.ErrNoRows {
+			return "", err
+		}
 		evaluate(err)
-		return body
+		return body, nil
 	}
 
 	dbReference, err := resolveDbFileReference(database...)

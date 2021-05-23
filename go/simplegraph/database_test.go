@@ -45,7 +45,7 @@ func TestResolveDbFileReference(t *testing.T) {
 	}
 }
 
-func TestInitialize(t *testing.T) {
+func TestInitializeAndCrud(t *testing.T) {
 	file := "testdb.sqlite3"
 	Initialize(file)
 	defer os.Remove(file)
@@ -56,5 +56,32 @@ func TestInitialize(t *testing.T) {
 	}
 	if fsErr != nil {
 		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
+	}
+
+	apple := `{"id":"1","name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
+	count := AddNode([]byte(apple), file)
+	if count != 1 {
+		t.Errorf("AddNode() inserted %d but expected 1", count)
+	}
+
+	count = AddNodeAndId([]byte(`{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`), "2", file)
+	if count != 1 {
+		t.Errorf("AddNodeAndId() inserted %d but expected 1", count)
+	}
+
+	count = ConnectNodes("1", "2", file)
+	if count != 1 {
+		t.Errorf("ConnectNodes() inserted %d but expected 1", count)
+	}
+
+	node, err := FindNode("1", file)
+	if node != apple && err != nil {
+		t.Errorf("FindNode() produced %q,%q but expected %q,nil", node, err.Error(), apple)
+	}
+
+	node, err = FindNode("3", file)
+	notFound := "sql: no rows in result set"
+	if node != "" && !ErrorMatches(err, notFound) {
+		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", notFound)
 	}
 }
