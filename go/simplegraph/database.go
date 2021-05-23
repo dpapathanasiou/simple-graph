@@ -143,3 +143,22 @@ func RemoveNode(identifier string, database ...string) bool {
 	defer db.Close()
 	return delete(db)
 }
+
+func FindNode(identifier string, database ...string) string {
+	find := func(db *sql.DB) string {
+		stmt, err := db.Prepare(SearchNodeById)
+		evaluate(err)
+		defer stmt.Close()
+		var body string
+		err = stmt.QueryRow(identifier).Scan(&body)
+		evaluate(err)
+		return body
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	return find(db)
+}
