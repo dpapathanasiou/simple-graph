@@ -63,7 +63,8 @@ func TestInitializeAndCrud(t *testing.T) {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNodeAndId([]byte(`{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`), "2", file)
+	woz := `{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`
+	count, err = AddNodeAndId([]byte(woz), "2", file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
@@ -77,6 +78,12 @@ func TestInitializeAndCrud(t *testing.T) {
 	uniqueIdConstraint := "UNIQUE constraint failed: nodes.id"
 	if count != 0 && !ErrorMatches(err, uniqueIdConstraint) {
 		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), uniqueIdConstraint)
+	}
+
+	count, err = AddNode([]byte(woz), file)
+	idConstraint := "NOT NULL constraint failed: nodes.id"
+	if count != 0 && !ErrorMatches(err, idConstraint) {
+		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), idConstraint)
 	}
 
 	node, err := FindNode("1", file)
