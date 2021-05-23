@@ -135,9 +135,14 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = ConnectNodes("1", "2", file)
+	count, err = AddNodeAndId([]byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`), "4", file)
 	if count != 1 && err != nil {
-		t.Errorf("ConnectNodes() inserted %d,%q but expected 1,nil", count, err.Error())
+		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = AddNodeAndId([]byte(`{"name": "Mike Markkula", "type":["person","investor"]}`), "5", file)
+	if count != 1 && err != nil {
+		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	count, err = AddNode([]byte(apple), file)
@@ -150,12 +155,43 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), ID_CONSTRAINT)
 	}
 
+	founded := `{"action": "founded"}`
+	count, err = ConnectNodesWithProperties("2", "1", []byte(founded), file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = ConnectNodesWithProperties("3", "1", []byte(founded), file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = ConnectNodesWithProperties("4", "1", []byte(founded), file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = ConnectNodesWithProperties("5", "1", []byte(`{"action": "invested", "equity": 80000, "debt": 170000}`), file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = ConnectNodesWithProperties("1", "4", []byte(`{"action": "divested", "amount": 800, "date": "April 12, 1976"}`), file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = ConnectNodes("2", "3", file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodes() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
 	node, err := FindNode("1", file)
 	if node != apple && err != nil {
 		t.Errorf("FindNode() produced %q,%q but expected %q,nil", node, err.Error(), apple)
 	}
 
-	node, err = FindNode("4", file)
+	node, err = FindNode("7", file)
 	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
@@ -169,6 +205,46 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	}
 	if !arrayContains(nodes, jobs) {
 		t.Errorf("FindNodes() did not return %s as expected", jobs)
+	}
+
+	idList, traverseErr := TraverseFromTo("2", "3", Traverse, file)
+	if traverseErr != nil {
+		t.Errorf("TraverseFromTo() produced an error %s but expected nil", traverseErr.Error())
+	}
+	for _, expectedId := range []string{"2", "1", "3"} {
+		if !arrayContains(idList, expectedId) {
+			t.Errorf("TraverseFromTo() did not return %s as expected", expectedId)
+		}
+	}
+
+	idList, traverseErr = TraverseFrom("5", TraverseInbound, file)
+	if traverseErr != nil {
+		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
+	}
+	for _, expectedId := range []string{"5"} {
+		if !arrayContains(idList, expectedId) {
+			t.Errorf("TraverseFrom() did not return %s as expected", expectedId)
+		}
+	}
+
+	idList, traverseErr = TraverseFrom("5", TraverseOutbound, file)
+	if traverseErr != nil {
+		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
+	}
+	for _, expectedId := range []string{"5", "1", "4"} {
+		if !arrayContains(idList, expectedId) {
+			t.Errorf("TraverseFrom() did not return %s as expected", expectedId)
+		}
+	}
+
+	idList, traverseErr = TraverseFrom("5", Traverse, file)
+	if traverseErr != nil {
+		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
+	}
+	for _, expectedId := range []string{"5", "1", "2", "3", "4"} {
+		if !arrayContains(idList, expectedId) {
+			t.Errorf("TraverseFrom() did not return %s as expected", expectedId)
+		}
 	}
 
 	if !RemoveNode("2", file) {
