@@ -2,7 +2,6 @@ package simplegraph
 
 import (
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func ErrorMatches(actual error, expected string) bool {
 	if expected == "" {
 		return false
 	}
-	return strings.Contains(actual.Error(), expected)
+	return actual.Error() == expected
 }
 
 func TestResolveDbFileReference(t *testing.T) {
@@ -59,19 +58,25 @@ func TestInitializeAndCrud(t *testing.T) {
 	}
 
 	apple := `{"id":"1","name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
-	count := AddNode([]byte(apple), file)
-	if count != 1 {
-		t.Errorf("AddNode() inserted %d but expected 1", count)
+	count, err := AddNode([]byte(apple), file)
+	if count != 1 && err != nil {
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count = AddNodeAndId([]byte(`{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`), "2", file)
-	if count != 1 {
-		t.Errorf("AddNodeAndId() inserted %d but expected 1", count)
+	count, err = AddNodeAndId([]byte(`{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`), "2", file)
+	if count != 1 && err != nil {
+		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	count = ConnectNodes("1", "2", file)
 	if count != 1 {
 		t.Errorf("ConnectNodes() inserted %d but expected 1", count)
+	}
+
+	count, err = AddNode([]byte(apple), file)
+	uniqueIdConstraint := "UNIQUE constraint failed: nodes.id"
+	if count != 0 && !ErrorMatches(err, uniqueIdConstraint) {
+		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), uniqueIdConstraint)
 	}
 
 	node, err := FindNode("1", file)

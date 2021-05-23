@@ -56,7 +56,7 @@ func Initialize(database ...string) {
 	init(db)
 }
 
-func insert(node string, database ...string) int64 {
+func insert(node string, database ...string) (int64, error) {
 	ins := func(db *sql.DB) (sql.Result, error) {
 		stmt, stmtErr := db.Prepare(InsertNode)
 		evaluate(stmtErr)
@@ -69,13 +69,13 @@ func insert(node string, database ...string) int64 {
 	evaluate(dbErr)
 	defer db.Close()
 	in, inErr := ins(db)
-	evaluate(inErr)
-	rows, rowsErr := in.RowsAffected()
-	evaluate(rowsErr)
-	return rows
+	if inErr != nil {
+		return 0, inErr
+	}
+	return in.RowsAffected()
 }
 
-func AddNodeAndId(node []byte, identifier string, database ...string) int64 {
+func AddNodeAndId(node []byte, identifier string, database ...string) (int64, error) {
 	closingBraceIdx := bytes.LastIndexByte(node, '}')
 	if closingBraceIdx > 0 {
 		addId := []byte(fmt.Sprintf(", \"id\": %q", identifier))
@@ -85,7 +85,7 @@ func AddNodeAndId(node []byte, identifier string, database ...string) int64 {
 	return insert(string(node), database...)
 }
 
-func AddNode(node []byte, database ...string) int64 {
+func AddNode(node []byte, database ...string) (int64, error) {
 	return insert(string(node), database...)
 }
 
