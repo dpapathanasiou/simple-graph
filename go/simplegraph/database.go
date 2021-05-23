@@ -188,13 +188,85 @@ func generateSearchLike(properties map[string]string) string {
 }
 
 func generateSearchStatement(properties map[string]string, equality bool) string {
-	clause := strings.Builder{}
 	var where string
 	if equality {
 		where = generateSearchEquals(properties)
 	} else {
 		where = generateSearchLike(properties)
 	}
-	fmt.Fprintf(&clause, "%s %s", strings.TrimSpace(SearchNode), where)
-	return clause.String()
+	return fmt.Sprintf("%s %s", strings.TrimSpace(SearchNode), where)
+}
+
+func generateSearchBindings(properties map[string]string, startsWith bool, contains bool) []string {
+	bindings := []string{}
+	for _, val := range properties {
+		var binding string
+		if startsWith {
+			binding = fmt.Sprintf("%s%%", val)
+		} else if contains {
+			binding = fmt.Sprintf("%%%s%%", val)
+		} else {
+			binding = val
+		}
+		bindings = append(bindings, binding)
+	}
+	return bindings
+}
+
+func convertSearchBindingsToParameters(bindings []string) []interface{} {
+	params := make([]interface{}, len(bindings))
+	for i, binding := range bindings {
+		params[i] = binding
+	}
+	return params
+}
+
+func FindNodes(properties map[string]string, startsWith bool, contains bool, database ...string) ([]string, []error) {
+	var statement string
+	if startsWith || contains {
+		statement = generateSearchStatement(properties, false)
+	} else {
+		statement = generateSearchStatement(properties, true)
+	}
+	bindings := generateSearchBindings(properties, startsWith, contains)
+
+	find := func(db *sql.DB) ([]string, []error) {
+		stmt, stmtErr := db.Prepare(statement)
+		evaluate(stmtErr)
+		defer stmt.Close()
+
+		results := []string{}
+		errors := []error{}
+		rows, err := stmt.Query(convertSearchBindingsToParameters(bindings)...)
+		if err != nil {
+			results = append(results, "")
+			errors = append(errors, err)
+			return results, errors
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var body string
+			err = rows.Scan(&body)
+			if err != nil {
+				results = append(results, "")
+				errors = append(errors, err)
+				return results, errors
+			}
+			results = append(results, body)
+			errors = append(errors, nil)
+		}
+		err = rows.Err()
+		if err != nil {
+			results = append(results, "")
+			errors = append(errors, err)
+		}
+		return results, errors
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	return find(db)
 }

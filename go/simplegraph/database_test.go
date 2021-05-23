@@ -69,9 +69,30 @@ func TestGenerateSearchStatement(t *testing.T) {
 	if where != sql {
 		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
 	}
+
+	equality := []string{"Steve", "founder"}
+	for i, binding := range generateSearchBindings(props, false, false) {
+		if binding != equality[i] {
+			t.Errorf("generateSearchBindings() = %q but expected %q", binding, equality[i])
+		}
+	}
+
+	startsWith := []string{"Steve%", "founder%"}
+	for i, binding := range generateSearchBindings(props, true, false) {
+		if binding != startsWith[i] {
+			t.Errorf("generateSearchBindings() = %q but expected %q", binding, startsWith[i])
+		}
+	}
+
+	contains := []string{"%Steve%", "%founder%"}
+	for i, binding := range generateSearchBindings(props, false, true) {
+		if binding != contains[i] {
+			t.Errorf("generateSearchBindings() = %q but expected %q", binding, contains[i])
+		}
+	}
 }
 
-func TestInitializeAndCrud(t *testing.T) {
+func TestInitializeAndCrudAndSearch(t *testing.T) {
 	file := "testdb.sqlite3"
 	Initialize(file)
 	defer os.Remove(file)
@@ -84,16 +105,22 @@ func TestInitializeAndCrud(t *testing.T) {
 		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
 	}
 
-	apple := `{"id":"1","name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
-	count, err := AddNode([]byte(apple), file)
+	apple := `{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
+	count, err := AddNodeAndId([]byte(apple), "1", file)
+	if count != 1 && err != nil {
+		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	woz := `{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`
+	count, err = AddNode([]byte(woz), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	woz := `{"name": "Steve Wozniak", "type":["person","engineer","founder"]}`
-	count, err = AddNodeAndId([]byte(woz), "2", file)
+	jobs := `{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`
+	count, err = AddNode([]byte(jobs), file)
 	if count != 1 && err != nil {
-		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	count, err = ConnectNodes("1", "2", file)
@@ -116,9 +143,30 @@ func TestInitializeAndCrud(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,nil", node, err.Error(), apple)
 	}
 
-	node, err = FindNode("3", file)
+	node, err = FindNode("4", file)
 	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
+	}
+
+	nodes, errors := FindNodes(map[string]string{"name": "Steve"}, true, false, file)
+	if len(nodes) != len(errors) {
+		t.Errorf("FindNodes() node %d, errors %d but expected equal counts", len(nodes), len(errors))
+	}
+	wozFound := false
+	jobsFound := false
+	for _, body := range nodes {
+		if body == woz {
+			wozFound = true
+		}
+		if body == jobs {
+			jobsFound = true
+		}
+	}
+	if !wozFound {
+		t.Errorf("FindNodes() did not return %s as expected", woz)
+	}
+	if !jobsFound {
+		t.Errorf("FindNodes() did not return %s as expected", jobs)
 	}
 
 	if !RemoveNode("2", file) {
@@ -129,4 +177,5 @@ func TestInitializeAndCrud(t *testing.T) {
 	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
+
 }
