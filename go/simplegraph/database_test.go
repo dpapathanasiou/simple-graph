@@ -84,4 +84,13 @@ func TestInitializeAndCrud(t *testing.T) {
 	if node != "" && !ErrorMatches(err, notFound) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", notFound)
 	}
+
+	if !RemoveNode("2", file) {
+		t.Error("RemoveNode() returned false but expected true")
+	}
+
+	node, err = FindNode("2", file)
+	if node != "" && !ErrorMatches(err, notFound) {
+		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", notFound)
+	}
 }
