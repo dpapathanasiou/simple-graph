@@ -89,7 +89,7 @@ func AddNode(node []byte, database ...string) (int64, error) {
 	return insert(string(node), database...)
 }
 
-func ConnectNodesWithProperties(sourceId string, targetId string, properties []byte, database ...string) int64 {
+func ConnectNodesWithProperties(sourceId string, targetId string, properties []byte, database ...string) (int64, error) {
 	connect := func(db *sql.DB) (sql.Result, error) {
 		stmt, stmtErr := db.Prepare(InsertEdge)
 		evaluate(stmtErr)
@@ -102,13 +102,13 @@ func ConnectNodesWithProperties(sourceId string, targetId string, properties []b
 	evaluate(dbErr)
 	defer db.Close()
 	cx, cxErr := connect(db)
-	evaluate(cxErr)
-	rows, rowsErr := cx.RowsAffected()
-	evaluate(rowsErr)
-	return rows
+	if cxErr != nil {
+		return 0, cxErr
+	}
+	return cx.RowsAffected()
 }
 
-func ConnectNodes(sourceId string, targetId string, database ...string) int64 {
+func ConnectNodes(sourceId string, targetId string, database ...string) (int64, error) {
 	return ConnectNodesWithProperties(sourceId, targetId, []byte(`{}`), database...)
 }
 

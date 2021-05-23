@@ -68,9 +68,9 @@ func TestInitializeAndCrud(t *testing.T) {
 		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count = ConnectNodes("1", "2", file)
-	if count != 1 {
-		t.Errorf("ConnectNodes() inserted %d but expected 1", count)
+	count, err = ConnectNodes("1", "2", file)
+	if count != 1 && err != nil {
+		t.Errorf("ConnectNodes() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	count, err = AddNode([]byte(apple), file)
