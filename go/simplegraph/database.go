@@ -15,6 +15,9 @@ import (
 const (
 	SQLITE                  = "sqlite3"
 	WITH_FOREIGN_KEY_PRAGMA = "%s?_foreign_keys=true"
+	ID_CONSTRAINT           = "NOT NULL constraint failed: nodes.id"
+	UNIQUE_ID_CONSTRAINT    = "UNIQUE constraint failed: nodes.id"
+	NO_ROWS_FOUND           = "sql: no rows in result set"
 )
 
 func resolveDbFileReference(names ...string) (string, error) {

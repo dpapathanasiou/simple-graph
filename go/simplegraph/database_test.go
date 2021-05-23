@@ -75,15 +75,13 @@ func TestInitializeAndCrud(t *testing.T) {
 	}
 
 	count, err = AddNode([]byte(apple), file)
-	uniqueIdConstraint := "UNIQUE constraint failed: nodes.id"
-	if count != 0 && !ErrorMatches(err, uniqueIdConstraint) {
-		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), uniqueIdConstraint)
+	if count != 0 && !ErrorMatches(err, UNIQUE_ID_CONSTRAINT) {
+		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), UNIQUE_ID_CONSTRAINT)
 	}
 
 	count, err = AddNode([]byte(woz), file)
-	idConstraint := "NOT NULL constraint failed: nodes.id"
-	if count != 0 && !ErrorMatches(err, idConstraint) {
-		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), idConstraint)
+	if count != 0 && !ErrorMatches(err, ID_CONSTRAINT) {
+		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), ID_CONSTRAINT)
 	}
 
 	node, err := FindNode("1", file)
@@ -92,9 +90,8 @@ func TestInitializeAndCrud(t *testing.T) {
 	}
 
 	node, err = FindNode("3", file)
-	notFound := "sql: no rows in result set"
-	if node != "" && !ErrorMatches(err, notFound) {
-		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", notFound)
+	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
+		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 
 	if !RemoveNode("2", file) {
@@ -102,7 +99,7 @@ func TestInitializeAndCrud(t *testing.T) {
 	}
 
 	node, err = FindNode("2", file)
-	if node != "" && !ErrorMatches(err, notFound) {
-		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", notFound)
+	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
+		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 }
