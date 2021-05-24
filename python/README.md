@@ -2,6 +2,11 @@
 
 This is the [Python](https://www.python.org/) implementation.
 
+## TODO
+
+* Unit tests using [pytest](https://docs.pytest.org/en/latest/)
+* Bulk operations using [executemany](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.executemany)
+
 # Usage
 
 ## Installation
