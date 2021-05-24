@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# this script produces the sql constants for the go module,
+# based on the contents of the /sql folder, one for each file
 
 mkdir -p simplegraph
 echo 'package simplegraph' > simplegraph/constants.go
