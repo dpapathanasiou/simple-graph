@@ -4,9 +4,11 @@ This is the [Go](https://golang.org/) implementation.
 
 ## TODO
 
-* Visualization (in [Graphviz](https://graphviz.org/) or equivalent)
+* Visualization in [Graphviz](https://graphviz.org/) using [go-graphviz](https://github.com/goccy/go-graphviz) (or equivalent)
 * Makefile with correct build tags and generation dependencies
 * Self-contained `main.go` file with usage examples
+* Bulk operations
+* Update and [upsert](https://en.wiktionary.org/wiki/upsert) actions
 
 # Usage
 
