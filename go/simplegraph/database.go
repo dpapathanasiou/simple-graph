@@ -266,7 +266,7 @@ func FindNodes(properties map[string]string, startsWith bool, contains bool, dat
 	return find(db)
 }
 
-func traverseFromTo(source string, target string, statement string) func(*sql.DB) ([]string, error) {
+func traverseFromTo(source string, statement string, target string) func(*sql.DB) ([]string, error) {
 	return func(db *sql.DB) ([]string, error) {
 		stmt, stmtErr := db.Prepare(statement)
 		evaluate(stmtErr)
@@ -287,39 +287,9 @@ func traverseFromTo(source string, target string, statement string) func(*sql.DB
 				return results, err
 			}
 			results = append(results, identifier)
-			if identifier == target {
+			if len(target) > 0 && identifier == target {
 				break
 			}
-		}
-		err = rows.Err()
-		if err != nil {
-			results = append(results, "")
-		}
-		return results, err
-	}
-}
-
-func traverseFrom(source string, statement string) func(*sql.DB) ([]string, error) {
-	return func(db *sql.DB) ([]string, error) {
-		stmt, stmtErr := db.Prepare(statement)
-		evaluate(stmtErr)
-		defer stmt.Close()
-
-		results := []string{}
-		rows, err := stmt.Query(source)
-		if err != nil {
-			results = append(results, "")
-			return results, err
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var identifier string
-			err = rows.Scan(&identifier)
-			if err != nil {
-				results = append(results, "")
-				return results, err
-			}
-			results = append(results, identifier)
 		}
 		err = rows.Err()
 		if err != nil {
@@ -335,7 +305,7 @@ func TraverseFromTo(source string, target string, traversal string, database ...
 	db, dbErr := sql.Open(SQLITE, dbReference)
 	evaluate(dbErr)
 	defer db.Close()
-	fn := traverseFromTo(source, target, traversal)
+	fn := traverseFromTo(source, traversal, target)
 	return fn(db)
 }
 
@@ -345,6 +315,6 @@ func TraverseFrom(source string, traversal string, database ...string) ([]string
 	db, dbErr := sql.Open(SQLITE, dbReference)
 	evaluate(dbErr)
 	defer db.Close()
-	fn := traverseFrom(source, traversal)
+	fn := traverseFromTo(source, traversal, "")
 	return fn(db)
 }
