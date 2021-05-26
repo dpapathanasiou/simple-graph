@@ -169,6 +169,23 @@ func FindNode(identifier string, database ...string) (string, error) {
 	return find(db)
 }
 
+func UpdateNodeBody(identifier string, body string, database ...string) error {
+	update := func(db *sql.DB) error {
+		stmt, err := db.Prepare(UpdateNode)
+		evaluate(err)
+		defer stmt.Close()
+		_, err = stmt.Exec(body, identifier)
+		return err
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	return update(db)
+}
+
 func generateWhereClauseForSearch(properties map[string]string, predicate string) string {
 	clauses := []string{}
 	for key := range properties {

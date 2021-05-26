@@ -207,6 +207,17 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNodes() did not return %s as expected", jobs)
 	}
 
+	wozNick := `{"name":"Steve Wozniak","type":["person","engineer","founder"],"nickname":"Woz","id":"2"}`
+	err = UpdateNodeBody("2", wozNick, file)
+	if err != nil {
+		t.Errorf("UpdateNodeBody() produced %q but expected nil", err.Error())
+	}
+
+	node, err = FindNode("2", file)
+	if node != wozNick && err != nil {
+		t.Errorf("FindNode() produced %q,%q but expected %q,nil", node, err.Error(), apple)
+	}
+
 	idList, traverseErr := TraverseFromTo("2", "3", Traverse, file)
 	if traverseErr != nil {
 		t.Errorf("TraverseFromTo() produced an error %s but expected nil", traverseErr.Error())
