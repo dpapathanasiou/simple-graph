@@ -78,17 +78,25 @@ func insert(node string, database ...string) (int64, error) {
 	return in.RowsAffected()
 }
 
-func AddNodeAndId(node []byte, identifier string, database ...string) (int64, error) {
+func needsIdentifier(node []byte) bool {
+	// TODO: make this more rigorous, using json marshalling
+	return !bytes.Contains(node, []byte("\"id\":"))
+}
+
+func setIdentifier(node []byte, identifier string) []byte {
 	closingBraceIdx := bytes.LastIndexByte(node, '}')
 	if closingBraceIdx > 0 {
 		addId := []byte(fmt.Sprintf(", \"id\": %q", identifier))
 		node = append(node[:closingBraceIdx], addId...)
 		node = append(node, '}')
 	}
-	return insert(string(node), database...)
+	return node
 }
 
-func AddNode(node []byte, database ...string) (int64, error) {
+func AddNode(identifier string, node []byte, database ...string) (int64, error) {
+	if needsIdentifier(node) {
+		return insert(string(setIdentifier(node, identifier)), database...)
+	}
 	return insert(string(node), database...)
 }
 
@@ -184,6 +192,20 @@ func UpdateNodeBody(identifier string, body string, database ...string) error {
 	evaluate(dbErr)
 	defer db.Close()
 	return update(db)
+}
+
+func UpsertNode(identifier string, body string, database ...string) error {
+	update := []byte(body)
+	node, err := FindNode(identifier, database...)
+	if node == "" && err == sql.ErrNoRows {
+		_, err = AddNode(identifier, update, database...)
+		return err
+	} else {
+		if needsIdentifier(update) {
+			return UpdateNodeBody(identifier, string(setIdentifier(update, identifier)), database...)
+		}
+		return UpdateNodeBody(identifier, body, database...)
+	}
 }
 
 func generateWhereClauseForSearch(properties map[string]string, predicate string) string {

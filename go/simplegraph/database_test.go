@@ -118,39 +118,39 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	}
 
 	apple := `{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
-	count, err := AddNodeAndId([]byte(apple), "1", file)
+	count, err := AddNode("1", []byte(apple), file)
 	if count != 1 && err != nil {
-		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	woz := `{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`
-	count, err = AddNode([]byte(woz), file)
+	count, err = AddNode("2", []byte(woz), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
 	jobs := `{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`
-	count, err = AddNode([]byte(jobs), file)
+	count, err = AddNode("3", []byte(jobs), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNodeAndId([]byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`), "4", file)
+	count, err = AddNode("4", []byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`), file)
 	if count != 1 && err != nil {
-		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNodeAndId([]byte(`{"name": "Mike Markkula", "type":["person","investor"]}`), "5", file)
+	count, err = AddNode("5", []byte(`{"name": "Mike Markkula", "type":["person","investor"]}`), file)
 	if count != 1 && err != nil {
-		t.Errorf("AddNodeAndId() inserted %d,%q but expected 1,nil", count, err.Error())
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNode([]byte(apple), file)
+	count, err = AddNode("1", []byte(apple), file)
 	if count != 0 && !ErrorMatches(err, UNIQUE_ID_CONSTRAINT) {
 		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), UNIQUE_ID_CONSTRAINT)
 	}
 
-	count, err = AddNode([]byte(woz), file)
+	count, err = AddNode("2", []byte(woz), file)
 	if count != 0 && !ErrorMatches(err, ID_CONSTRAINT) {
 		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), ID_CONSTRAINT)
 	}
@@ -211,6 +211,11 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	err = UpdateNodeBody("2", wozNick, file)
 	if err != nil {
 		t.Errorf("UpdateNodeBody() produced %q but expected nil", err.Error())
+	}
+
+	err = UpsertNode("1", apple, file)
+	if err != nil {
+		t.Errorf("UpsertNode() produced %q but expected nil", err.Error())
 	}
 
 	node, err = FindNode("2", file)
