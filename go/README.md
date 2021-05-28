@@ -5,10 +5,8 @@ This is the [Go](https://golang.org/) implementation.
 ## TODO
 
 * Visualization in [Graphviz](https://graphviz.org/) using [go-graphviz](https://github.com/goccy/go-graphviz) (or equivalent)
-* Makefile with correct build tags and generation dependencies
-* Self-contained `main.go` file with usage examples
 * Bulk operations
-* Update and [upsert](https://en.wiktionary.org/wiki/upsert) actions
+* Marshalling/unmarshalling in [json](https://golang.org/pkg/encoding/json/) or [gabs](https://github.com/Jeffail/gabs) injecting "id" fields, merging bodies in update and [upsert](https://en.wiktionary.org/wiki/upsert)
 
 # Usage
 
