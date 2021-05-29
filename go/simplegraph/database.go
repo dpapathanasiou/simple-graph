@@ -3,6 +3,7 @@ package simplegraph
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -19,6 +20,11 @@ const (
 	UNIQUE_ID_CONSTRAINT    = "UNIQUE constraint failed: nodes.id"
 	NO_ROWS_FOUND           = "sql: no rows in result set"
 )
+
+type NodeData struct {
+	Identifier interface{} `json:"id"`
+	Body       interface{}
+}
 
 func resolveDbFileReference(names ...string) (string, error) {
 	args := len(names)
@@ -79,8 +85,10 @@ func insert(node string, database ...string) (int64, error) {
 }
 
 func needsIdentifier(node []byte) bool {
-	// TODO: make this more rigorous, using json marshalling
-	return !bytes.Contains(node, []byte("\"id\":"))
+	var nodeData NodeData
+	err := json.Unmarshal(node, &nodeData)
+	evaluate(err)
+	return nodeData.Identifier == nil
 }
 
 func setIdentifier(node []byte, identifier string) []byte {

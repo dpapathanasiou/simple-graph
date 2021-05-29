@@ -104,6 +104,23 @@ func TestGenerateSearchStatement(t *testing.T) {
 	}
 }
 
+func TestNodeDataInspection(t *testing.T) {
+	missing := needsIdentifier([]byte(`{"status": 404,"result": "error", "reason": "Not found"}`))
+	if !missing {
+		t.Errorf("needsIdentifier() said false but expected true")
+	}
+
+	alsoMissing := needsIdentifier([]byte(`{"status": 404,"result": "error", "logger": {"id": "9c26f784-b0d6-45ed-aba4-7c333f78babf"}, "reason": "Not found"}`))
+	if !alsoMissing {
+		t.Errorf("needsIdentifier() said false but expected true")
+	}
+
+	present := needsIdentifier([]byte(`{"status": 404,"result": "error", "id": "16fd2706-8baf-433b-82eb-8c7fada847da", "reason": "Not found"}`))
+	if present {
+		t.Errorf("needsIdentifier() said true but expected false")
+	}
+}
+
 func TestInitializeAndCrudAndSearch(t *testing.T) {
 	file := "testdb.sqlite3"
 	Initialize(file)
