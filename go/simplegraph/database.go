@@ -305,7 +305,7 @@ func FindNodes(properties map[string]string, startsWith bool, contains bool, dat
 	return find(db)
 }
 
-func traverseFrom(source string, statement string, target string) func(*sql.DB) ([]string, error) {
+func traverse(source string, statement string, target string) func(*sql.DB) ([]string, error) {
 	return func(db *sql.DB) ([]string, error) {
 		stmt, stmtErr := db.Prepare(statement)
 		evaluate(stmtErr)
@@ -344,7 +344,7 @@ func TraverseFromTo(source string, target string, traversal string, database ...
 	db, dbErr := sql.Open(SQLITE, dbReference)
 	evaluate(dbErr)
 	defer db.Close()
-	fn := traverseFrom(source, traversal, target)
+	fn := traverse(source, traversal, target)
 	return fn(db)
 }
 
@@ -354,6 +354,6 @@ func TraverseFrom(source string, traversal string, database ...string) ([]string
 	db, dbErr := sql.Open(SQLITE, dbReference)
 	evaluate(dbErr)
 	defer db.Close()
-	fn := traverseFrom(source, traversal, "")
+	fn := traverse(source, traversal, "")
 	return fn(db)
 }
