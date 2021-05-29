@@ -65,7 +65,54 @@ func Initialize(database ...string) {
 	init(db)
 }
 
-func insert(node string, database ...string) (int64, error) {
+func makeBulkInsertStatement(statement string, inserts int) string {
+	pivot := "VALUES"
+	parts := strings.Split(strings.TrimSpace(statement), pivot)
+	if len(parts) == 2 {
+		vals := make([]string, 0, inserts)
+		for i := 0; i < inserts; i++ {
+			vals = append(vals, parts[1])
+		}
+		return fmt.Sprintf("%s%s%s", parts[0], pivot, strings.Join(vals, ","))
+	}
+	return statement
+}
+
+func makeBulkEdgeInserts(sources []string, targets []string, properties []string) []string {
+	l := len(sources)
+	if l != len(targets) && l != len(properties) {
+		evaluate(errors.New("unequal edge lists"))
+	}
+	args := make([]string, 0, l*3)
+	for i := 0; i < l; i++ {
+		args = append(args, sources[i])
+		args = append(args, targets[i])
+		args = append(args, properties[i])
+	}
+	return args
+}
+
+func insertMany(nodes []interface{}, database ...string) (int64, error) {
+	ins := func(db *sql.DB) (sql.Result, error) {
+		fmt.Println(makeBulkInsertStatement(InsertNode, len(nodes)))
+		stmt, stmtErr := db.Prepare(makeBulkInsertStatement(InsertNode, len(nodes)))
+		evaluate(stmtErr)
+		return stmt.Exec(nodes...)
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	in, inErr := ins(db)
+	if inErr != nil {
+		return 0, inErr
+	}
+	return in.RowsAffected()
+}
+
+func insertOne(node string, database ...string) (int64, error) {
 	ins := func(db *sql.DB) (sql.Result, error) {
 		stmt, stmtErr := db.Prepare(InsertNode)
 		evaluate(stmtErr)
@@ -103,9 +150,26 @@ func setIdentifier(node []byte, identifier string) []byte {
 
 func AddNode(identifier string, node []byte, database ...string) (int64, error) {
 	if needsIdentifier(node) {
-		return insert(string(setIdentifier(node, identifier)), database...)
+		return insertOne(string(setIdentifier(node, identifier)), database...)
 	}
-	return insert(string(node), database...)
+	return insertOne(string(node), database...)
+}
+
+func AddNodes(identifiers []string, nodes [][]byte, database ...string) (int64, error) {
+	l := len(nodes)
+	if l != len(identifiers) {
+		evaluate(errors.New("unequal node, identifier lists"))
+	}
+	args := make([]interface{}, l)
+	for i := 0; i < l; i++ {
+		if needsIdentifier(nodes[i]) {
+			args[i] = string(setIdentifier(nodes[i], identifiers[i]))
+		} else {
+			args[i] = string(nodes[i])
+		}
+
+	}
+	return insertMany(args, database...)
 }
 
 func ConnectNodesWithProperties(sourceId string, targetId string, properties []byte, database ...string) (int64, error) {

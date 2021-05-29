@@ -104,6 +104,35 @@ func TestGenerateSearchStatement(t *testing.T) {
 	}
 }
 
+func TestMakeBulkInsertStatement(t *testing.T) {
+	expected := `INSERT INTO nodes VALUES(json(?))`
+	actual := makeBulkInsertStatement(InsertNode, 1)
+	if expected != actual {
+		t.Errorf("generateBulkInsertStatement() = %q but expected %q", actual, expected)
+	}
+
+	expected = `INSERT INTO nodes VALUES(json(?)),(json(?)),(json(?))`
+	actual = makeBulkInsertStatement(InsertNode, 3)
+	if expected != actual {
+		t.Errorf("generateBulkInsertStatement() = %q but expected %q", actual, expected)
+	}
+
+	expected = `INSERT INTO edges VALUES(?, ?, json(?)),(?, ?, json(?))`
+	actual = makeBulkInsertStatement(InsertEdge, 2)
+	if expected != actual {
+		t.Errorf("generateBulkInsertStatement() = %q but expected %q", actual, expected)
+	}
+}
+
+func TestMakeBulkEdgeInserts(t *testing.T) {
+	expected := []string{"3", "1", `{"action":"founded"}`, "4", "1", `{}`}
+	for i, actual := range makeBulkEdgeInserts([]string{"3", "4"}, []string{"1", "1"}, []string{`{"action":"founded"}`, `{}`}) {
+		if expected[i] != actual {
+			t.Errorf("generateBulkInsertStatement() = %q but expected %q", actual, expected[i])
+		}
+	}
+}
+
 func TestNodeDataInspection(t *testing.T) {
 	missing := needsIdentifier([]byte(`{"status": 404,"result": "error", "reason": "Not found"}`))
 	if !missing {
@@ -289,4 +318,30 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 
+}
+
+func TestBulkInserts(t *testing.T) {
+	file := "testdb.sqlite3"
+	Initialize(file)
+	defer os.Remove(file)
+
+	fs, fsErr := os.Lstat(file)
+	if fs.Name() != file {
+		t.Errorf("Initialize() produced %q but expected %q", fs.Name(), file)
+	}
+	if fsErr != nil {
+		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
+	}
+
+	nodes := [][]byte{[]byte(`{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`),
+		[]byte(`{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`),
+		[]byte(`{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`),
+		[]byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`),
+		[]byte(`{"name": "Mike Markkula", "type":["person","investor"]}`)}
+	ids := []string{"1", "2", "3", "4", "5"}
+
+	count, err := AddNodes(ids, nodes, file)
+	if count != 1 && err != nil {
+		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
 }
