@@ -230,7 +230,7 @@ func BulkConnectNodes(sources []string, targets []string, database ...string) (i
 	return BulkConnectNodesWithProperties(sources, targets, props, database...)
 }
 
-func RemoveNode(identifier string, database ...string) bool {
+func RemoveNodes(identifiers []string, database ...string) bool {
 	delete := func(db *sql.DB) bool {
 		edgeStmt, edgeErr := db.Prepare(DeleteEdge)
 		evaluate(edgeErr)
@@ -240,15 +240,17 @@ func RemoveNode(identifier string, database ...string) bool {
 		evaluate(txErr)
 
 		var err error
-		_, err = tx.Stmt(edgeStmt).Exec(identifier, identifier)
-		if err != nil {
-			tx.Rollback()
-			return false
-		}
-		_, err = tx.Stmt(nodeStmt).Exec(identifier)
-		if err != nil {
-			tx.Rollback()
-			return false
+		for _, identifier := range identifiers {
+			_, err = tx.Stmt(edgeStmt).Exec(identifier, identifier)
+			if err != nil {
+				tx.Rollback()
+				return false
+			}
+			_, err = tx.Stmt(nodeStmt).Exec(identifier)
+			if err != nil {
+				tx.Rollback()
+				return false
+			}
 		}
 		tx.Commit()
 		return true

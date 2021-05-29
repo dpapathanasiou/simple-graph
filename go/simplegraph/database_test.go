@@ -309,8 +309,8 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
-	if !RemoveNode("2", file) {
-		t.Error("RemoveNode() returned false but expected true")
+	if !RemoveNodes([]string{"2", "4"}, file) {
+		t.Error("RemoveNodes() returned false but expected true")
 	}
 
 	node, err = FindNode("2", file)
@@ -318,6 +318,10 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 
+	node, err = FindNode("4", file)
+	if node != "" && !ErrorMatches(err, NO_ROWS_FOUND) {
+		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
+	}
 }
 
 func TestBulkInserts(t *testing.T) {
@@ -362,5 +366,4 @@ func TestBulkInserts(t *testing.T) {
 	if count != 1 && err != nil {
 		t.Errorf("BulkConnectNodes() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
-
 }
