@@ -78,12 +78,12 @@ func makeBulkInsertStatement(statement string, inserts int) string {
 	return statement
 }
 
-func makeBulkEdgeInserts(sources []string, targets []string, properties []string) []string {
+func makeBulkEdgeInserts(sources []string, targets []string, properties []string) []interface{} {
 	l := len(sources)
 	if l != len(targets) && l != len(properties) {
 		evaluate(errors.New("unequal edge lists"))
 	}
-	args := make([]string, 0, l*3)
+	args := make([]interface{}, 0, l*3)
 	for i := 0; i < l; i++ {
 		args = append(args, sources[i])
 		args = append(args, targets[i])
@@ -94,7 +94,6 @@ func makeBulkEdgeInserts(sources []string, targets []string, properties []string
 
 func insertMany(nodes []interface{}, database ...string) (int64, error) {
 	ins := func(db *sql.DB) (sql.Result, error) {
-		fmt.Println(makeBulkInsertStatement(InsertNode, len(nodes)))
 		stmt, stmtErr := db.Prepare(makeBulkInsertStatement(InsertNode, len(nodes)))
 		evaluate(stmtErr)
 		return stmt.Exec(nodes...)
@@ -117,6 +116,25 @@ func insertOne(node string, database ...string) (int64, error) {
 		stmt, stmtErr := db.Prepare(InsertNode)
 		evaluate(stmtErr)
 		return stmt.Exec(node)
+	}
+
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	in, inErr := ins(db)
+	if inErr != nil {
+		return 0, inErr
+	}
+	return in.RowsAffected()
+}
+
+func connectMany(edges []interface{}, count int, database ...string) (int64, error) {
+	ins := func(db *sql.DB) (sql.Result, error) {
+		stmt, stmtErr := db.Prepare(makeBulkInsertStatement(InsertEdge, count))
+		evaluate(stmtErr)
+		return stmt.Exec(edges...)
 	}
 
 	dbReference, err := resolveDbFileReference(database...)
@@ -193,6 +211,23 @@ func ConnectNodesWithProperties(sourceId string, targetId string, properties []b
 
 func ConnectNodes(sourceId string, targetId string, database ...string) (int64, error) {
 	return ConnectNodesWithProperties(sourceId, targetId, []byte(`{}`), database...)
+}
+
+func BulkConnectNodesWithProperties(sources []string, targets []string, properties []string, database ...string) (int64, error) {
+	l := len(sources)
+	if l != len(targets) && l != len(properties) {
+		evaluate(errors.New("unequal source, target, properties lists"))
+	}
+	return connectMany(makeBulkEdgeInserts(sources, targets, properties), l, database...)
+}
+
+func BulkConnectNodes(sources []string, targets []string, database ...string) (int64, error) {
+	l := len(sources)
+	props := make([]string, 0, l)
+	for i := 0; i < l; i++ {
+		props = append(props, `{}`)
+	}
+	return BulkConnectNodesWithProperties(sources, targets, props, database...)
 }
 
 func RemoveNode(identifier string, database ...string) bool {

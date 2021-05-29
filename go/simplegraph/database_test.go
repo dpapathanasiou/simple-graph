@@ -344,4 +344,23 @@ func TestBulkInserts(t *testing.T) {
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
+
+	sources := []string{"2", "3", "4", "5", "1"}
+	targets := []string{"1", "1", "1", "1", "4"}
+	properties := []string{`{"action": "founded"}`,
+		`{"action": "founded"}`,
+		`{"action": "founded"}`,
+		`{"action": "invested", "equity": 80000, "debt": 170000}`,
+		`{"action": "divested", "amount": 800, "date": "April 12, 1976"}`}
+
+	count, err = BulkConnectNodesWithProperties(sources, targets, properties, file)
+	if count != 1 && err != nil {
+		t.Errorf("BulkConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
+	count, err = BulkConnectNodes([]string{"2"}, []string{"3"}, file)
+	if count != 1 && err != nil {
+		t.Errorf("BulkConnectNodes() inserted %d,%q but expected 1,nil", count, err.Error())
+	}
+
 }
