@@ -47,8 +47,7 @@ def apple(database_test_file, nodes, edges):
     yield
 
 
-def test_initialize(database_test_file):
-    db.initialize(database_test_file)
+def test_initialize(database_test_file, apple):
     assert database_test_file.exists()
     assert database_test_file.stat().st_size == 28672
 
@@ -56,6 +55,17 @@ def test_initialize(database_test_file):
 def test_search(database_test_file, apple, nodes):
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
-    steves = db.atomic(database_test_file, db.find_nodes({'name': 'Steve'}, db._search_like, db._search_starts_with))
+    steves = db.atomic(database_test_file, db.find_nodes(
+        {'name': 'Steve'}, db._search_like, db._search_starts_with))
     assert len(steves) == 2
-    assert list(map(lambda x: x['name'], steves)) == ['Steve Wozniak', 'Steve Jobs']
+    assert list(map(lambda x: x['name'], steves)) == [
+        'Steve Wozniak', 'Steve Jobs']
+
+
+def test_traversal(database_test_file, apple):
+    assert db.traverse(database_test_file, 2, 3) == ['2', '1', '3']
+    assert db.traverse(database_test_file, 4, 5) == ['4', '1', '2', '3', '5']
+    assert db.traverse(database_test_file, 5, neighbors_fn=db.find_inbound_neighbors) == ['5']
+    assert db.traverse(database_test_file, 5, neighbors_fn=db.find_outbound_neighbors) == ['5', '1', '4']
+    assert db.traverse(database_test_file, 5, neighbors_fn=db.find_neighbors) == ['5', '1', '2', '3', '4']
+
