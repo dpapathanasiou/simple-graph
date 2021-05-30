@@ -2,11 +2,6 @@
 
 This is the [Python](https://www.python.org/) implementation.
 
-## TODO
-
-* Unit tests using [pytest](https://docs.pytest.org/en/latest/)
-* Bulk operations using [executemany](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.executemany)
-
 # Usage
 
 ## Installation
@@ -24,17 +19,22 @@ Any single node or path of nodes can also be depicted graphically by using the `
 
 ## Testing
 
-There will be more robust and dedicated unit tests with [pytest](https://docs.pytest.org/en/latest/) soon, but in the meantime, running the example locally will do in a pinch.
+There are [unit tests](database_test.py) in [pytest](https://docs.pytest.org/en/latest/) covering each of the basic functions.
 
-This bit of shell magic will pull out the commands from this document:
+If you have the correct version of SQLite installed, everything should just work without errors:
 
 ```sh
-grep ">>> " README.md | grep -v "grep" | sed -e 's/>>> //'
+$ pytest
+===================================== test session starts =====================================
+platform linux -- Python 3.7.10, pytest-6.2.2, py-1.10.0, pluggy-0.13.1
+rootdir: /path/to/repos/simple-graph/python
+plugins: anyio-2.2.0
+collected 4 items                                                                             
+
+database_test.py ....                                                                   [100%]
+
+====================================== 4 passed in 0.66s ======================================
 ```
-
-Use a final `| clip` (Windows), `| pbcopy` (macOS), or `| xclip -selection clipboard` (most linuxes) to copy all the commands into your clipboard.
-
-If you have the correct version of SQLite installed, everything should just work without errors.
 
 ### Example
 
@@ -88,7 +88,7 @@ Any path or list of nodes can rendered graphically by using the `visualize` func
 >>> db.visualize(apple, 'apple.dot', [4, 1, 5])
 ```
 
-The resulting text file also comes with an associated image (the default is [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics), but that can be changed by supplying a different value to the `format` parameter)
+The [resulting text file](../.examples/apple-raw.dot) also comes with an associated image (the default is [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics), but that can be changed by supplying a different value to the `format` parameter)
 
 The default options include every key/value pair (excluding the id) in the node and edge objects:
 
@@ -102,4 +102,9 @@ There are display options to help refine what is produced:
 
 ![More refined visualization](../.examples/apple.png)
 
-The resulting dot file can be edited further as needed; the [dot guide](https://graphviz.org/pdf/dotguide.pdf) has more options and examples.
+The [resulting dot file](../.examples/apple.dot) can be edited further as needed; the [dot guide](https://graphviz.org/pdf/dotguide.pdf) has more options and examples.
+
+### TODO
+
+- [X] Unit tests using [pytest](https://docs.pytest.org/en/latest/)
+- [ ] Bulk operations using [executemany](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.executemany)
