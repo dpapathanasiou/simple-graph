@@ -1,6 +1,7 @@
 import pytest
+from pathlib import Path
+from filecmp import cmp
 import database as db
-
 
 @pytest.fixture()
 def database_test_file(tmp_path):
@@ -71,3 +72,13 @@ def test_traversal(database_test_file, apple):
                        neighbors_fn=db.find_outbound_neighbors) == ['5', '1', '4']
     assert db.traverse(database_test_file, 5, neighbors_fn=db.find_neighbors) == [
         '5', '1', '2', '3', '4']
+
+
+def test_visualization(database_test_file, apple, tmp_path):
+    dot_raw = tmp_path / "apple-raw.dot"
+    db.visualize(database_test_file, dot_raw, [4, 1, 5])
+    assert cmp(dot_raw, Path.cwd() / ".." / ".examples" / "apple-raw.dot")
+    dot = tmp_path / "apple.dot"
+    db.visualize(database_test_file, dot, [4, 1, 5], exclude_node_keys=[
+                 'type'], hide_edge_key=True)
+    assert cmp(dot, Path.cwd() / ".." / ".examples" / "apple.dot")
