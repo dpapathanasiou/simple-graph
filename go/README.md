@@ -12,7 +12,11 @@ This is the [Go](https://golang.org/) implementation.
   ```sh
   go get github.com/mattn/go-sqlite3
   ```
-* Execute the [constants generation script](generate-constants.sh) to build the `constants.go` file using the statements in the [sql](../sql) folder
+* [go-graphviz](https://github.com/goccy/go-graphviz) for visualizations
+  ```sh
+  go get github.com/goccy/go-graphviz
+  ```
+* Optionally, or if the statements in the [sql](../sql) folder change during development, run the [constants generation script](generate-constants.sh) to rebuild the `constants.go` file
   ```sh
   ./generate-constants.sh
   ```
