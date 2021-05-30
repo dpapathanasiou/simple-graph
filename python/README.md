@@ -93,7 +93,7 @@ The resulting text file also comes with an associated image (the default is [png
 
 The default options include every key/value pair (excluding the id) in the node and edge objects:
 
-![Basic visualization](.examples/apple-raw.png)
+![Basic visualization](../.examples/apple-raw.png)
 
 There are display options to help refine what is produced:
 
@@ -101,6 +101,6 @@ There are display options to help refine what is produced:
 >>> db.visualize(apple, 'apple.dot', [4, 1, 5], exclude_node_keys=['type'], hide_edge_key=True)
 ```
 
-![More refined visualization](.examples/apple.png)
+![More refined visualization](../.examples/apple.png)
 
 The resulting dot file can be edited further as needed; the [dot guide](https://graphviz.org/pdf/dotguide.pdf) has more options and examples.
