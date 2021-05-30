@@ -13,9 +13,8 @@ This is the [Python](https://www.python.org/) implementation.
 
 * [SQLite](https://www.sqlite.org/), version 3.31.0 or higher; get the latest source or precompiled binaries from the [SQLite Download Page](https://www.sqlite.org/download.html) 
 * [Python](https://www.python.org/)
-* [Graphviz](https://graphviz.org/) for visualization
-  -  install ([download page](https://www.graphviz.org/download/), [installation procedure for Windows](https://forum.graphviz.org/t/new-simplified-installation-procedure-on-windows/224)); and
-  - `pip install graphviz`
+* [Graphviz](https://graphviz.org/) for visualization ([download page](https://www.graphviz.org/download/), [installation procedure for Windows](https://forum.graphviz.org/t/new-simplified-installation-procedure-on-windows/224))
+* `pip install -r requirements.txt`
 
 ## Basic Functions
 
