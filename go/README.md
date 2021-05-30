@@ -2,11 +2,6 @@
 
 This is the [Go](https://golang.org/) implementation.
 
-## TODO
-
-* Visualization in [Graphviz](https://graphviz.org/) using [go-graphviz](https://github.com/goccy/go-graphviz) (or equivalent)
-* Marshalling/unmarshalling in [json](https://golang.org/pkg/encoding/json/) or [gabs](https://github.com/Jeffail/gabs) injecting "id" fields, merging bodies in update and [upsert](https://en.wiktionary.org/wiki/upsert)
-
 # Usage
 
 ## Installation
@@ -43,3 +38,7 @@ If you have the correct version of SQLite installed, the tests should all pass:
 PASS
 ok  	github.com/dpapathanasiou/simple-graph/go/simplegraph	0.067s
 ```
+
+### TODO
+
+- [ ] Marshall/unmarshal using [json](https://golang.org/pkg/encoding/json/) (or [gabs](https://github.com/Jeffail/gabs), etc.) for injecting "id" fields, and merging bodies in update and [upsert](https://en.wiktionary.org/wiki/upsert) instead of the full replacement that happens now
