@@ -26,6 +26,12 @@ type NodeData struct {
 	Body       interface{}
 }
 
+type EdgeData struct {
+	Source string
+	Target string
+	Label  string
+}
+
 func resolveDbFileReference(names ...string) (string, error) {
 	args := len(names)
 	switch args {
@@ -400,9 +406,6 @@ func FindNodes(properties map[string]string, startsWith bool, contains bool, dat
 			results = append(results, body)
 		}
 		err = rows.Err()
-		if err != nil {
-			results = append(results, "")
-		}
 		return results, err
 	}
 
@@ -440,9 +443,6 @@ func traverse(source string, statement string, target string) func(*sql.DB) ([]s
 			}
 		}
 		err = rows.Err()
-		if err != nil {
-			results = append(results, "")
-		}
 		return results, err
 	}
 }
@@ -464,5 +464,74 @@ func TraverseFrom(source string, traversal string, database ...string) ([]string
 	evaluate(dbErr)
 	defer db.Close()
 	fn := traverse(source, traversal, "")
+	return fn(db)
+}
+
+func neighbors(statement string, queryBinding func(*sql.Stmt) (*sql.Rows, error)) func(*sql.DB) ([]EdgeData, error) {
+	return func(db *sql.DB) ([]EdgeData, error) {
+		stmt, stmtErr := db.Prepare(statement)
+		evaluate(stmtErr)
+		defer stmt.Close()
+
+		results := []EdgeData{}
+		rows, err := queryBinding(stmt)
+		if err != nil {
+			results = append(results, EdgeData{})
+			return results, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var result EdgeData
+			var source string
+			var target string
+			var label string
+			err = rows.Scan(&source, &target, &label)
+			if err != nil {
+				results = append(results, result)
+				return results, err
+			}
+			result.Source = source
+			result.Target = target
+			if len(label) > 0 {
+				result.Label = label
+			}
+			results = append(results, result)
+		}
+		err = rows.Err()
+		return results, err
+	}
+}
+
+func getConnectionsOneWay(identifier string, direction string, database ...string) ([]EdgeData, error) {
+	query := func(stmt *sql.Stmt) (*sql.Rows, error) {
+		return stmt.Query(identifier)
+	}
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	fn := neighbors(direction, query)
+	return fn(db)
+}
+
+func ConnectionsIn(identifier string, database ...string) ([]EdgeData, error) {
+	return getConnectionsOneWay(identifier, SearchEdgesInbound, database...)
+}
+
+func ConnectionsOut(identifier string, database ...string) ([]EdgeData, error) {
+	return getConnectionsOneWay(identifier, SearchEdgesOutbound, database...)
+}
+
+func Connections(identifier string, database ...string) ([]EdgeData, error) {
+	query := func(stmt *sql.Stmt) (*sql.Rows, error) {
+		return stmt.Query(identifier, identifier)
+	}
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	fn := neighbors(SearchEdges, query)
 	return fn(db)
 }

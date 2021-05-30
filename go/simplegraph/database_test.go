@@ -309,6 +309,46 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
+	edges, err := ConnectionsIn("1", file)
+	if err != nil {
+		t.Errorf("ConnectionsIn() produced an error %s but expected nil", err.Error())
+	}
+	expected := []EdgeData{{"1", "4", `{"action":"divested","amount":800,"date":"April 12, 1976"}`}}
+	for i, exp := range expected {
+		if edges[i] != exp {
+			t.Errorf("ConnectionsIn() produced %q but expected %q", edges[i], exp)
+		}
+	}
+
+	edges, err = ConnectionsOut("1", file)
+	if err != nil {
+		t.Errorf("ConnectionsIn() produced an error %s but expected nil", err.Error())
+	}
+	expected = []EdgeData{{"2", "1", `{"action":"founded"}`},
+		{"3", "1", `{"action":"founded"}`},
+		{"4", "1", `{"action":"founded"}`},
+		{"5", "1", `{"action":"invested","equity":80000,"debt":170000}`}}
+	for i, exp := range expected {
+		if edges[i] != exp {
+			t.Errorf("ConnectionsOut() produced %q but expected %q", edges[i], exp)
+		}
+	}
+
+	edges, err = Connections("1", file)
+	if err != nil {
+		t.Errorf("Connections() produced an error %s but expected nil", err.Error())
+	}
+	expected = []EdgeData{{"1", "4", `{"action":"divested","amount":800,"date":"April 12, 1976"}`},
+		{"2", "1", `{"action":"founded"}`},
+		{"3", "1", `{"action":"founded"}`},
+		{"4", "1", `{"action":"founded"}`},
+		{"5", "1", `{"action":"invested","equity":80000,"debt":170000}`}}
+	for i, exp := range expected {
+		if edges[i] != exp {
+			t.Errorf("ConnectionsOut() produced %q but expected %q", edges[i], exp)
+		}
+	}
+
 	if !RemoveNodes([]string{"2", "4"}, file) {
 		t.Error("RemoveNodes() returned false but expected true")
 	}
