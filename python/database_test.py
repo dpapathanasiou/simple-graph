@@ -55,13 +55,15 @@ def test_initialize(database_test_file, apple):
     assert database_test_file.stat().st_size == 28672
 
 
-def test_bulk_add(database_test_file, nodes, edges):
+def test_bulk_operations(database_test_file, nodes, edges):
     db.initialize(database_test_file)
     ids = []
     bodies = []
     for id, body in nodes.items():
         ids.append(id)
         bodies.append(body)
+
+    # bulk add and confirm
     db.atomic(database_test_file, db.add_nodes(bodies, ids))
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
@@ -77,6 +79,8 @@ def test_bulk_add(database_test_file, nodes, edges):
                 properties.append(label)
             else:
                 properties.append({})
+
+    # bulk connect and confirm
     db.atomic(database_test_file, db.connect_many_nodes(
         sources, targets, properties))
     for src, tgts in edges.items():
@@ -89,6 +93,11 @@ def test_bulk_add(database_test_file, nodes, edges):
             else:
                 expected = (src, tgt, {})
             assert expected in actual
+
+    # bulk remove and confirm
+    db.atomic(database_test_file, db.remove_nodes(ids))
+    for id in ids:
+        assert db.atomic(database_test_file, db.find_node(id)) == {}
 
 
 def test_search(database_test_file, apple, nodes):

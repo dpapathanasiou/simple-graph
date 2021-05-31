@@ -96,6 +96,11 @@ def remove_node(identifier):
         cursor.execute(read_sql('delete-node.sql'), (identifier,))
     return _remove_node
 
+def remove_nodes(identifiers):
+    def _remove_node(cursor):
+        cursor.executemany(read_sql('delete-edge.sql'), [(identifier, identifier,) for identifier in identifiers])
+        cursor.executemany(read_sql('delete-node.sql'), [(identifier,) for identifier in identifiers])
+    return _remove_node
 
 def _parse_search_results(results, idx=0):
     return [json.loads(item[idx]) for item in results]
