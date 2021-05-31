@@ -83,6 +83,13 @@ def connect_nodes(source_id, target_id, properties={}):
     return _connect_nodes
 
 
+def connect_many_nodes(sources, targets, properties):
+    def _connect_nodes(cursor):
+        cursor.executemany(read_sql(
+            'insert-edge.sql'), [(x[0], x[1], json.dumps(x[2]),) for x in zip(sources, targets, properties)])
+    return _connect_nodes
+
+
 def remove_node(identifier):
     def _remove_node(cursor):
         cursor.execute(read_sql('delete-edge.sql'), (identifier, identifier,))

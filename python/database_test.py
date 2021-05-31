@@ -1,4 +1,5 @@
 import pytest
+import json
 from pathlib import Path
 from filecmp import cmp
 import database as db
@@ -54,7 +55,7 @@ def test_initialize(database_test_file, apple):
     assert database_test_file.stat().st_size == 28672
 
 
-def test_bulk_add(database_test_file, nodes):
+def test_bulk_add(database_test_file, nodes, edges):
     db.initialize(database_test_file)
     ids = []
     bodies = []
@@ -64,6 +65,30 @@ def test_bulk_add(database_test_file, nodes):
     db.atomic(database_test_file, db.add_nodes(bodies, ids))
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
+    sources = []
+    targets = []
+    properties = []
+    for src, tgts in edges.items():
+        for target in tgts:
+            tgt, label = target
+            sources.append(src)
+            targets.append(tgt)
+            if label:
+                properties.append(label)
+            else:
+                properties.append({})
+    db.atomic(database_test_file, db.connect_many_nodes(
+        sources, targets, properties))
+    for src, tgts in edges.items():
+        actual = [tuple(json.loads(x) for x in edge) for edge in db.atomic(
+            database_test_file, db.get_connections_one_way(src))]
+        for target in tgts:
+            tgt, label = target
+            if label:
+                expected = (src, tgt, label)
+            else:
+                expected = (src, tgt, {})
+            assert expected in actual
 
 
 def test_search(database_test_file, apple, nodes):
