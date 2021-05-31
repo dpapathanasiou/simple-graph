@@ -25,15 +25,15 @@ If you have the correct version of SQLite installed, everything should just work
 
 ```sh
 $ pytest
-===================================== test session starts =====================================
+=========================== test session starts ============================
 platform linux -- Python 3.7.10, pytest-6.2.2, py-1.10.0, pluggy-0.13.1
 rootdir: /path/to/repos/simple-graph/python
 plugins: anyio-2.2.0
-collected 4 items                                                                             
+collected 5 items                                                          
 
-database_test.py ....                                                                   [100%]
+database_test.py .....                                               [100%]
 
-====================================== 4 passed in 0.66s ======================================
+============================ 5 passed in 0.58s =============================
 ```
 
 ### Example
@@ -57,6 +57,8 @@ Dropping into a python shell, we can create, [upsert](https://en.wiktionary.org/
 >>> db.atomic(apple, db.connect_nodes(2, 3))
 >>> db.atomic(apple, db.upsert_node(2, {'nickname': 'Woz'}))
 ```
+
+There are also bulk operations, to insert and connect lists of nodes in one transaction.
 
 The nodes can be searched by their ids or any other combination of attributes (either as strict equality, or using `_search_like` in combination with `_search_starts_with` or `_search_contains`):
 
@@ -103,8 +105,3 @@ There are display options to help refine what is produced:
 ![More refined visualization](../.examples/apple.png)
 
 The [resulting dot file](../.examples/apple.dot) can be edited further as needed; the [dot guide](https://graphviz.org/pdf/dotguide.pdf) has more options and examples.
-
-### TODO
-
-- [X] Unit tests using [pytest](https://docs.pytest.org/en/latest/)
-- [ ] Bulk operations using [executemany](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.executemany)
