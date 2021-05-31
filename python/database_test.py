@@ -3,6 +3,7 @@ from pathlib import Path
 from filecmp import cmp
 import database as db
 
+
 @pytest.fixture()
 def database_test_file(tmp_path):
     d = tmp_path / "simplegraph"
@@ -51,6 +52,18 @@ def apple(database_test_file, nodes, edges):
 def test_initialize(database_test_file, apple):
     assert database_test_file.exists()
     assert database_test_file.stat().st_size == 28672
+
+
+def test_bulk_add(database_test_file, nodes):
+    db.initialize(database_test_file)
+    ids = []
+    bodies = []
+    for id, body in nodes.items():
+        ids.append(id)
+        bodies.append(body)
+    db.atomic(database_test_file, db.add_nodes(bodies, ids))
+    for id, node in nodes.items():
+        assert db.atomic(database_test_file, db.find_node(id)) == node
 
 
 def test_search(database_test_file, apple, nodes):

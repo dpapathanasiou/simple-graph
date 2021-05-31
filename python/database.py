@@ -55,6 +55,13 @@ def add_node(data, identifier=None):
     return _add_node
 
 
+def add_nodes(nodes, ids):
+    def _add_nodes(cursor):
+        cursor.executemany(read_sql('insert-node.sql'), [(x,) for x in map(
+            lambda node: json.dumps(_set_id(node[0], node[1])), zip(ids, nodes))])
+    return _add_nodes
+
+
 def upsert_node(identifier, data):
     def _upsert_node(cursor):
         current_data = find_node(identifier)(cursor)
