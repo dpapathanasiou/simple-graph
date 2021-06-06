@@ -1,14 +1,21 @@
 # About
 
-This is the [Python](https://www.python.org/) implementation.
+This is the [Python](https://www.python.org/) implementation, now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/).
 
 # Usage
 
-## Installation
+## Installation Prerequisites
 
 * [SQLite](https://www.sqlite.org/), version 3.31.0 or higher; get the latest source or precompiled binaries from the [SQLite Download Page](https://www.sqlite.org/download.html) 
 * [Python](https://www.python.org/)
 * [Graphviz](https://graphviz.org/) for visualization ([download page](https://www.graphviz.org/download/), [installation procedure for Windows](https://forum.graphviz.org/t/new-simplified-installation-procedure-on-windows/224))
+
+Install from [latest PyPI](https://pypi.org/project/simple-graph-sqlite/):
+
+* `pip install simple-graph-sqlite`
+
+or using this source distribution:
+
 * `pip install -r requirements.txt`
 
 ## Basic Functions
@@ -42,7 +49,8 @@ Dropping into a python shell, we can create, [upsert](https://en.wiktionary.org/
 
 ```
 >>> apple = "apple.sqlite"
->>> import database as db
+>>> import database as db                          # if using this source distribution; or
+>>> from simple_graph_sqlite import database as db # if installed from PyPI
 >>> db.initialize(apple)
 >>> db.atomic(apple, db.add_node({'name': 'Apple Computer Company', 'type':['company', 'start-up'], 'founded': 'April 1, 1976'}, 1))
 >>> db.atomic(apple, db.add_node({'name': 'Steve Wozniak', 'type':['person','engineer','founder']}, 2))

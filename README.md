@@ -28,7 +28,7 @@ There are also traversal functions as native SQLite [Common Table Expressions](h
 
 Choose an implementation:
 
-* [Python](python)
+* [Python](python) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
 * [Go](go)
 
 Want to contribute a version in your preferred language?
