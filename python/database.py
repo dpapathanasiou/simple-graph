@@ -250,7 +250,7 @@ def visualize(db_file, dot_file, path=[], connections=get_connections, format='p
     return atomic(db_file, _visualize)
 
 
-def visualize_bodies(db_file, dot_file, path=[], connections=get_connections, format='png',
+def visualize_bodies(dot_file, path=[], format='png',
                      exclude_node_keys=[], hide_node_key=False, node_kv=' ',
                      exclude_edge_keys=[], hide_edge_key=False, edge_kv=' '):
     dot = Digraph()
