@@ -177,15 +177,12 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        for i, row in enumerate(cursor.execute(neighbors_fn(True), (json.dumps(src), '()', '{}',))):
-            if i == 0:
-                continue
+        for row in cursor.execute(neighbors_fn(True), (json.dumps(src), ))[1:]:
             if row:
                 identifier, obj, _ = row
                 path.append(row)
                 if identifier == target and obj == '()':
                     break
-        print(path)
         return path
     return atomic(db_file, _traverse)
 
