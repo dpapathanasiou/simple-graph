@@ -181,9 +181,9 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
             if i == 0:
                 continue
             if row:
-                identifier = row[0]
+                identifier, obj, _ = row
                 path.append(row)
-                if identifier == target:
+                if identifier == target and obj == '()':
                     break
         return path
     return atomic(db_file, _traverse)

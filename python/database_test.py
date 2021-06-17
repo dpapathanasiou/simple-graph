@@ -125,8 +125,8 @@ def test_traversal_with_bodies(database_test_file, apple):
     def _normalize_results(results):
         return [(x, y, json.loads(z)) for (x, y, z) in results]
 
-    assert _normalize_results(db.traverse_with_bodies(database_test_file, 2, 3)) == _normalize_results(
-        [('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}')])
+    assert _normalize_results(db.traverse_with_bodies(database_test_file, 2, 3)) == _normalize_results([('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), (
+        '2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), ('5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":3}')])
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_inbound_neighbors)) == _normalize_results(
         [('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}')])
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_outbound_neighbors)) == _normalize_results([('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'), ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), (
