@@ -96,11 +96,15 @@ def remove_node(identifier):
         cursor.execute(read_sql('delete-node.sql'), (identifier,))
     return _remove_node
 
+
 def remove_nodes(identifiers):
     def _remove_node(cursor):
-        cursor.executemany(read_sql('delete-edge.sql'), [(identifier, identifier,) for identifier in identifiers])
-        cursor.executemany(read_sql('delete-node.sql'), [(identifier,) for identifier in identifiers])
+        cursor.executemany(read_sql(
+            'delete-edge.sql'), [(identifier, identifier,) for identifier in identifiers])
+        cursor.executemany(read_sql('delete-node.sql'),
+                           [(identifier,) for identifier in identifiers])
     return _remove_node
+
 
 def _parse_search_results(results, idx=0):
     return [json.loads(item[idx]) for item in results]
@@ -142,16 +146,16 @@ def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
     return _find_nodes
 
 
-def find_neighbors():
-    return read_sql('traverse.sql')
+def find_neighbors(with_bodies=False):
+    return read_sql("traverse-with-bodies.sql") if with_bodies else read_sql('traverse.sql')
 
 
-def find_outbound_neighbors():
-    return read_sql('traverse-outbound.sql')
+def find_outbound_neighbors(with_bodies=False):
+    return read_sql("traverse-with-bodies-outbound.sql") if with_bodies else read_sql('traverse-outbound.sql')
 
 
-def find_inbound_neighbors():
-    return read_sql('traverse-inbound.sql')
+def find_inbound_neighbors(with_bodies=False):
+    return read_sql("traverse-with-bodies-inbound.sql") if with_bodies else read_sql('traverse-inbound.sql')
 
 
 def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors):
@@ -163,6 +167,22 @@ def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors):
                 identifier = row[0]
                 if identifier not in path:
                     path.append(identifier)
+                if identifier == target:
+                    break
+        return path
+    return atomic(db_file, _traverse)
+
+
+def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
+    def _traverse(cursor):
+        path = []
+        target = json.dumps(tgt)
+        for i, row in enumerate(cursor.execute(neighbors_fn(True), (json.dumps(src), '()', '{}',))):
+            if i == 0:
+                continue
+            if row:
+                identifier = row[0]
+                path.append(row)
                 if identifier == target:
                     break
         return path
