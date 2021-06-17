@@ -177,7 +177,11 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        for row in cursor.execute(neighbors_fn(True), (json.dumps(src), ))[1:]:
+        header = None
+        for row in cursor.execute(neighbors_fn(True), (json.dumps(src), )):
+            if not header:
+                header = row
+                continue
             if row:
                 identifier, obj, _ = row
                 path.append(row)
