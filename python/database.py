@@ -185,6 +185,7 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
                 path.append(row)
                 if identifier == target and obj == '()':
                     break
+        print(path)
         return path
     return atomic(db_file, _traverse)
 
@@ -246,3 +247,26 @@ def visualize(db_file, dot_file, path=[], connections=get_connections, format='p
                         edges.append(edge)
         dot.render(dot_file, format=format)
     return atomic(db_file, _visualize)
+
+
+def visualize_bodies(db_file, dot_file, path=[], connections=get_connections, format='png',
+                     exclude_node_keys=[], hide_node_key=False, node_kv=' ',
+                     exclude_edge_keys=[], hide_edge_key=False, edge_kv=' '):
+    dot = Digraph()
+    current_id = None
+    edges = []
+    for (identifier, obj, properties) in path:
+        body = json.loads(properties)
+        if obj == '()':
+            name, label = _as_dot_node(
+                body, exclude_node_keys, hide_node_key, node_kv)
+            dot.node(name, label=label)
+            current_id = body['id']
+        else:
+            edge = (str(current_id), str(
+                identifier), body) if obj == '->' else (str(identifier), str(current_id), body)
+            if edge not in edges:
+                dot.edge(edge[0], edge[1], label=_as_dot_label(
+                    body, exclude_edge_keys, hide_edge_key, edge_kv) if body else None)
+                edges.append(edge)
+    dot.render(dot_file, format=format)

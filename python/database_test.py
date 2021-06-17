@@ -143,3 +143,12 @@ def test_visualization(database_test_file, apple, tmp_path):
     db.visualize(database_test_file, dot, [4, 1, 5], exclude_node_keys=[
                  'type'], hide_edge_key=True)
     assert cmp(dot, Path.cwd() / ".." / ".examples" / "apple.dot")
+
+def test_visualize_bodies(database_test_file, apple, tmp_path):
+    dot_raw = tmp_path / "apple-raw.dot"
+    db.visualize_bodies(database_test_file, dot_raw, db.traverse_with_bodies(database_test_file, 4, 5))
+    assert cmp(dot_raw, Path.cwd() / ".." / ".examples" / "apple-raw.dot")
+    dot = tmp_path / "apple.dot"
+    db.visualize(database_test_file, dot, [4, 1, 5], exclude_node_keys=[
+                 'type'], hide_edge_key=True)
+    assert cmp(dot, Path.cwd() / ".." / ".examples" / "apple.dot")
