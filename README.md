@@ -9,11 +9,17 @@ The [schema](sql/schema.sql) consists of just two structures:
 * Nodes - these are any [json](https://www.json.org/) objects, with the only constraint being that they each contain a unique `id` value 
 * Edges - these are pairs of node `id` values, specifying the direction, with an optional json object as connection properties
 
-There are also traversal functions as native SQLite [Common Table Expressions](https://www.sqlite.org/lang_with.html):
+There are also traversal functions as native SQLite [Common Table Expressions](https://www.sqlite.org/lang_with.html) which produce lists of identifiers or return all objects along the path:
 
-* [Both directions](sql/traverse.sql)
-* [Inbound](sql/traverse-inbound.sql)
-* [Outbound](sql/traverse-outbound.sql)
+* Both directions
+  * [identifiers](sql/traverse.sql)
+  * [all objects](sql/traverse-with-bodies.sql)
+* Inbound
+  * [identifiers](sql/traverse-inbound.sql)
+  * [all objects](sql/traverse-with-bodies-inbound.sql)
+* Outbound
+  * [identifiers](sql/traverse-outbound.sql)
+  * [all objects](sql/traverse-with-bodies-outbound.sql)
 
 # Applications
 
