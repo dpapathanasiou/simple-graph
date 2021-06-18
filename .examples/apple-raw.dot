@@ -3,6 +3,11 @@ digraph {
 	1 -> 4 [label="action divested\namount 800\ndate April 12, 1976"]
 	4 -> 1 [label="action founded"]
 	1 [label="name Apple Computer Company\ntype ['company', 'start-up']\nfounded April 1, 1976"]
+	2 -> 1 [label="action founded"]
+	3 -> 1 [label="action founded"]
 	5 -> 1 [label="action invested\nequity 80000\ndebt 170000"]
+	2 [label="name Steve Wozniak\ntype ['person', 'engineer', 'founder']"]
+	2 -> 3
+	3 [label="name Steve Jobs\ntype ['person', 'designer', 'founder']"]
 	5 [label="name Mike Markkula\ntype ['person', 'investor']"]
 }
