@@ -43,7 +43,7 @@ UNION
 SELECT * FROM edges WHERE target = ?
 `
 
-    SearchNodeById = `SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?
+    SearchNodeById = `SELECT body FROM nodes WHERE id = ?
 `
 
     SearchNode = `SELECT body FROM nodes WHERE 
@@ -70,6 +70,35 @@ SELECT * FROM edges WHERE target = ?
   UNION
   SELECT target FROM edges JOIN traverse ON source = id
 ) SELECT id FROM traverse;
+`
+
+    TraverseWithBodiesInbound = `WITH RECURSIVE traverse(x, y, obj) AS (
+  SELECT ?, '()', '{}'
+  UNION
+  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
+  UNION
+  SELECT source, '<-', properties FROM edges JOIN traverse ON target = x
+) SELECT x, y, obj FROM traverse;
+`
+
+    TraverseWithBodiesOutbound = `WITH RECURSIVE traverse(x, y, obj) AS (
+  SELECT ?, '()', '{}'
+  UNION
+  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
+  UNION
+  SELECT target, '->', properties FROM edges JOIN traverse ON source = x
+) SELECT x, y, obj FROM traverse;
+`
+
+    TraverseWithBodies = `WITH RECURSIVE traverse(x, y, obj) AS (
+  SELECT ?, '()', '{}'
+  UNION
+  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
+  UNION
+  SELECT source, '<-', properties FROM edges JOIN traverse ON target = x
+  UNION
+  SELECT target, '->', properties FROM edges JOIN traverse ON source = x
+) SELECT x, y, obj FROM traverse;
 `
 
     UpdateNode = `UPDATE nodes SET body = json(?) WHERE id = ?
