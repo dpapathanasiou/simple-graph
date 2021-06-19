@@ -5,6 +5,18 @@ import (
 	"testing"
 )
 
+const (
+	apple    = `{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":"1"}`
+	woz      = `{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`
+	wozNick  = `{"name":"Steve Wozniak","type":["person","engineer","founder"],"nickname":"Woz","id":"2"}`
+	jobs     = `{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`
+	wayne    = `{"name":"Ronald Wayne","type":["person","administrator","founder"]}`
+	markkula = `{"name":"Mike Markkula","type":["person","investor"]}`
+	founded  = `{"action":"founded"}`
+	invested = `{"action":"invested","equity":80000,"debt":170000}`
+	divested = `{"action":"divested","amount":800,"date":"April 12, 1976"}`
+)
+
 func ErrorMatches(actual error, expected string) bool {
 	if actual == nil {
 		return expected == ""
@@ -45,6 +57,15 @@ func TestResolveDbFileReference(t *testing.T) {
 }
 
 func arrayContains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
+func resultContains(slice []GraphData, val GraphData) bool {
 	for _, item := range slice {
 		if item == val {
 			return true
@@ -125,8 +146,8 @@ func TestMakeBulkInsertStatement(t *testing.T) {
 }
 
 func TestMakeBulkEdgeInserts(t *testing.T) {
-	expected := []string{"3", "1", `{"action":"founded"}`, "4", "1", `{}`}
-	for i, actual := range makeBulkEdgeInserts([]string{"3", "4"}, []string{"1", "1"}, []string{`{"action":"founded"}`, `{}`}) {
+	expected := []string{"3", "1", founded, "4", "1", `{}`}
+	for i, actual := range makeBulkEdgeInserts([]string{"3", "4"}, []string{"1", "1"}, []string{founded, `{}`}) {
 		if expected[i] != actual {
 			t.Errorf("generateBulkInsertStatement() = %q but expected %q", actual, expected[i])
 		}
@@ -163,30 +184,27 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
 	}
 
-	apple := `{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`
 	count, err := AddNode("1", []byte(apple), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	woz := `{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`
 	count, err = AddNode("2", []byte(woz), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	jobs := `{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`
 	count, err = AddNode("3", []byte(jobs), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNode("4", []byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`), file)
+	count, err = AddNode("4", []byte(wayne), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = AddNode("5", []byte(`{"name": "Mike Markkula", "type":["person","investor"]}`), file)
+	count, err = AddNode("5", []byte(markkula), file)
 	if count != 1 && err != nil {
 		t.Errorf("AddNode() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
@@ -201,7 +219,6 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("AddNode() inserted %d,%q but expected 0,%q", count, err.Error(), ID_CONSTRAINT)
 	}
 
-	founded := `{"action": "founded"}`
 	count, err = ConnectNodesWithProperties("2", "1", []byte(founded), file)
 	if count != 1 && err != nil {
 		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
@@ -217,12 +234,12 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = ConnectNodesWithProperties("5", "1", []byte(`{"action": "invested", "equity": 80000, "debt": 170000}`), file)
+	count, err = ConnectNodesWithProperties("5", "1", []byte(invested), file)
 	if count != 1 && err != nil {
 		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
 
-	count, err = ConnectNodesWithProperties("1", "4", []byte(`{"action": "divested", "amount": 800, "date": "April 12, 1976"}`), file)
+	count, err = ConnectNodesWithProperties("1", "4", []byte(divested), file)
 	if count != 1 && err != nil {
 		t.Errorf("ConnectNodesWithProperties() inserted %d,%q but expected 1,nil", count, err.Error())
 	}
@@ -253,7 +270,6 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNodes() did not return %s as expected", jobs)
 	}
 
-	wozNick := `{"name":"Steve Wozniak","type":["person","engineer","founder"],"nickname":"Woz","id":"2"}`
 	err = UpdateNodeBody("2", wozNick, file)
 	if err != nil {
 		t.Errorf("UpdateNodeBody() produced %q but expected nil", err.Error())
@@ -309,11 +325,32 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
+	nilNode := NodeData{Identifier: nil, Body: nil}
+	bodies, traverseWithErr := TraverseWithBodiesFromTo("2", "3", TraverseWithBodies, file)
+	if traverseWithErr != nil {
+		t.Errorf("TraverseWithBodiesFromTo() produced an error %s but expected nil", traverseWithErr.Error())
+	}
+	for _, expectedObject := range []GraphData{
+		{Node: NodeData{Identifier: "2", Body: wozNick}},
+		{Node: nilNode, Edge: EdgeData{Source: "2", Target: "1", Label: founded}},
+		{Node: nilNode, Edge: EdgeData{Source: "2", Target: "3", Label: "{}"}},
+		{Node: NodeData{Identifier: "1", Body: apple}},
+		{Node: nilNode, Edge: EdgeData{Source: "2", Target: "1", Label: founded}},
+		{Node: nilNode, Edge: EdgeData{Source: "3", Target: "1", Label: founded}},
+		{Node: nilNode, Edge: EdgeData{Source: "4", Target: "1", Label: founded}},
+		{Node: nilNode, Edge: EdgeData{Source: "5", Target: "1", Label: invested}},
+		{Node: nilNode, Edge: EdgeData{Source: "1", Target: "4", Label: divested}},
+		{Node: NodeData{Identifier: "3", Body: jobs}}} {
+		if !resultContains(bodies, expectedObject) {
+			t.Errorf("TraverseWithBodiesFromTo() did not return %v as expected", expectedObject)
+		}
+	}
+
 	edges, err := ConnectionsIn("1", file)
 	if err != nil {
 		t.Errorf("ConnectionsIn() produced an error %s but expected nil", err.Error())
 	}
-	expected := []EdgeData{{"1", "4", `{"action":"divested","amount":800,"date":"April 12, 1976"}`}}
+	expected := []EdgeData{{"1", "4", divested}}
 	for i, exp := range expected {
 		if edges[i] != exp {
 			t.Errorf("ConnectionsIn() produced %q but expected %q", edges[i], exp)
@@ -324,10 +361,10 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	if err != nil {
 		t.Errorf("ConnectionsIn() produced an error %s but expected nil", err.Error())
 	}
-	expected = []EdgeData{{"2", "1", `{"action":"founded"}`},
-		{"3", "1", `{"action":"founded"}`},
-		{"4", "1", `{"action":"founded"}`},
-		{"5", "1", `{"action":"invested","equity":80000,"debt":170000}`}}
+	expected = []EdgeData{{"2", "1", founded},
+		{"3", "1", founded},
+		{"4", "1", founded},
+		{"5", "1", invested}}
 	for i, exp := range expected {
 		if edges[i] != exp {
 			t.Errorf("ConnectionsOut() produced %q but expected %q", edges[i], exp)
@@ -338,11 +375,11 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 	if err != nil {
 		t.Errorf("Connections() produced an error %s but expected nil", err.Error())
 	}
-	expected = []EdgeData{{"1", "4", `{"action":"divested","amount":800,"date":"April 12, 1976"}`},
-		{"2", "1", `{"action":"founded"}`},
-		{"3", "1", `{"action":"founded"}`},
-		{"4", "1", `{"action":"founded"}`},
-		{"5", "1", `{"action":"invested","equity":80000,"debt":170000}`}}
+	expected = []EdgeData{{"1", "4", divested},
+		{"2", "1", founded},
+		{"3", "1", founded},
+		{"4", "1", founded},
+		{"5", "1", invested}}
 	for i, exp := range expected {
 		if edges[i] != exp {
 			t.Errorf("ConnectionsOut() produced %q but expected %q", edges[i], exp)
@@ -377,11 +414,11 @@ func TestBulkInserts(t *testing.T) {
 		t.Errorf("Initialize() produced error %q but expected nil", fsErr.Error())
 	}
 
-	nodes := [][]byte{[]byte(`{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976"}`),
-		[]byte(`{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`),
-		[]byte(`{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`),
-		[]byte(`{"name": "Ronald Wayne", "type":["person","administrator","founder"]}`),
-		[]byte(`{"name": "Mike Markkula", "type":["person","investor"]}`)}
+	nodes := [][]byte{[]byte(apple),
+		[]byte(woz),
+		[]byte(jobs),
+		[]byte(wayne),
+		[]byte(markkula)}
 	ids := []string{"1", "2", "3", "4", "5"}
 
 	count, err := AddNodes(ids, nodes, file)
@@ -391,11 +428,11 @@ func TestBulkInserts(t *testing.T) {
 
 	sources := []string{"2", "3", "4", "5", "1"}
 	targets := []string{"1", "1", "1", "1", "4"}
-	properties := []string{`{"action": "founded"}`,
-		`{"action": "founded"}`,
-		`{"action": "founded"}`,
-		`{"action": "invested", "equity": 80000, "debt": 170000}`,
-		`{"action": "divested", "amount": 800, "date": "April 12, 1976"}`}
+	properties := []string{founded,
+		founded,
+		founded,
+		invested,
+		divested}
 
 	count, err = BulkConnectNodesWithProperties(sources, targets, properties, file)
 	if count != 1 && err != nil {

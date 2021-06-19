@@ -513,7 +513,6 @@ func traverseWithBodies(source string, statement string, target string) func(*sq
 			count += 1
 		}
 		err = rows.Err()
-		fmt.Println(results)
 		return results, err
 	}
 }
