@@ -112,11 +112,9 @@ def _parse_search_results(results, idx=0):
 
 def find_node(identifier):
     def _find_node(cursor):
-        results = cursor.execute(
-            read_sql('search-node-by-id.sql'), (identifier,)).fetchall()
-        if len(results) == 1:
-            return _parse_search_results(results).pop()
-        return {}
+        result = cursor.execute(
+            read_sql('search-node-by-id.sql'), (identifier,)).fetchone()
+        return {} if not result else json.loads(result[0])
     return _find_node
 
 

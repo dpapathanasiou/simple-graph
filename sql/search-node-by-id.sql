@@ -1,1 +1,1 @@
-SELECT body FROM nodes WHERE json_extract(body, '$.id') = ?
+SELECT body FROM nodes WHERE id = ?
