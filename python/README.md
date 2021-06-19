@@ -32,15 +32,15 @@ If you have the correct version of SQLite installed, everything should just work
 
 ```sh
 $ pytest
-=========================== test session starts ============================
-platform linux -- Python 3.7.10, pytest-6.2.2, py-1.10.0, pluggy-0.13.1
+============================= test session starts ==============================
+platform linux -- Python 3.7.10, pytest-6.2.3, py-1.10.0, pluggy-0.13.1
 rootdir: /path/to/repos/simple-graph/python
 plugins: anyio-2.2.0
-collected 5 items                                                          
+collected 7 items                                                              
 
-database_test.py .....                                               [100%]
+database_test.py .......                                                 [100%]
 
-============================ 5 passed in 0.58s =============================
+============================== 7 passed in 0.92s ===============================
 ```
 
 ### Example
