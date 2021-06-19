@@ -32,6 +32,11 @@ type EdgeData struct {
 	Label  string
 }
 
+type GraphData struct {
+	Node NodeData
+	Edge EdgeData
+}
+
 func resolveDbFileReference(names ...string) (string, error) {
 	args := len(names)
 	switch args {
@@ -464,6 +469,72 @@ func TraverseFrom(source string, traversal string, database ...string) ([]string
 	evaluate(dbErr)
 	defer db.Close()
 	fn := traverse(source, traversal, "")
+	return fn(db)
+}
+
+func traverseWithBodies(source string, statement string, target string) func(*sql.DB) ([]GraphData, error) {
+	return func(db *sql.DB) ([]GraphData, error) {
+		stmt, stmtErr := db.Prepare(statement)
+		evaluate(stmtErr)
+		defer stmt.Close()
+
+		results := []GraphData{}
+		rows, err := stmt.Query(source)
+		if err != nil {
+			return results, err
+		}
+		defer rows.Close()
+
+		count := 0
+		currentId := ""
+		for rows.Next() {
+			var identifier string
+			var object string
+			var body string
+			err = rows.Scan(&identifier, &object, &body)
+			if err != nil {
+				return results, err
+			}
+			if count > 0 {
+				if object == "()" {
+					currentId = identifier
+					results = append(results, GraphData{Node: NodeData{Identifier: identifier, Body: body}})
+				} else {
+					if object == "->" {
+						results = append(results, GraphData{Edge: EdgeData{Source: currentId, Target: identifier, Label: body}})
+					} else {
+						results = append(results, GraphData{Edge: EdgeData{Source: identifier, Target: currentId, Label: body}})
+					}
+				}
+				if len(target) > 0 && identifier == target && object == "()" {
+					break
+				}
+			}
+			count += 1
+		}
+		err = rows.Err()
+		fmt.Println(results)
+		return results, err
+	}
+}
+
+func TraverseWithBodiesFromTo(source string, target string, traversal string, database ...string) ([]GraphData, error) {
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	fn := traverseWithBodies(source, traversal, target)
+	return fn(db)
+}
+
+func TraverseWithBodiesFrom(source string, traversal string, database ...string) ([]GraphData, error) {
+	dbReference, err := resolveDbFileReference(database...)
+	evaluate(err)
+	db, dbErr := sql.Open(SQLITE, dbReference)
+	evaluate(dbErr)
+	defer db.Close()
+	fn := traverseWithBodies(source, traversal, "")
 	return fn(db)
 }
 
