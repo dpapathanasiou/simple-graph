@@ -86,3 +86,59 @@ func Visualize(path []string, database ...string) string {
 	evaluate(err)
 	return buf.String()
 }
+
+func VisualizeBodies(path []GraphData, database ...string) string {
+	gv := graphviz.New()
+	graph, err := gv.Graph()
+	evaluate(err)
+	defer func() {
+		err := graph.Close()
+		evaluate(err)
+		gv.Close()
+	}()
+
+	nodes := make(map[string]*cgraph.Node)
+
+	for _, object := range path {
+		var node *cgraph.Node
+		var exists bool
+		var err error
+		if object.Node.Identifier != nil {
+			id := object.Node.Identifier.(string)
+			_, exists = nodes[id]
+			if !exists {
+				node, err = graph.CreateNode(id)
+				evaluate(err)
+				node.SetLabel(object.Node.Body.(string))
+				nodes[id] = node
+			}
+		}
+	}
+
+	for _, object := range path {
+		if object.Node.Identifier == nil {
+			source, sourceExists := nodes[object.Edge.Source]
+			target, targetExists := nodes[object.Edge.Target]
+			if sourceExists && targetExists {
+				edge, err := graph.CreateEdge("", source, target)
+				evaluate(err)
+				if object.Edge.Label != `{}` {
+					edge.SetLabel(object.Edge.Label)
+				}
+			}
+		}
+	}
+
+	/*
+		Could also render the image directly:
+
+		gv.RenderFilename(graph, graphviz.PNG, "/path/to/graph.png")
+
+		instead of returning the dot file string as this function does:
+	*/
+
+	var buf bytes.Buffer
+	err = gv.Render(graph, "dot", &buf)
+	evaluate(err)
+	return buf.String()
+}
