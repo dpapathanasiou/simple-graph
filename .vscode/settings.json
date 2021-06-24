@@ -1,5 +1,4 @@
 {
     "go.buildTags": "json1",
-    "go.testTags": "json1",
-    "python.pythonPath": "/Users/chhenning/.pyenv/versions/cooper/bin/python"
+    "go.testTags": "json1"
 }
