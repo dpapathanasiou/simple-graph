@@ -3,7 +3,7 @@
 """
 database.py
 
-A series of functions to leverage the (node, edge) schema of 
+A series of functions to leverage the (node, edge) schema of
 json-based nodes, and edges with optional json properties,
 using an atomic transaction wrapper function.
 
@@ -22,8 +22,10 @@ def read_sql(sql_file):
         return f.read()
 
 
-def atomic(db_file, cursor_exec_fn):
+def atomic(db_file, cursor_exec_fn, enable_tracing=False):
     connection = sqlite3.connect(db_file)
+    if enable_tracing:
+        connection.set_trace_callback(print)
     cursor = connection.cursor()
     cursor.execute("PRAGMA foreign_keys = TRUE;")
     results = cursor_exec_fn(cursor)
