@@ -1,5 +1,5 @@
 WITH RECURSIVE traverse(x, y, obj) AS (
-  SELECT ?, '()', '{}'
+  SELECT :source, '()', '{}'
   UNION
   SELECT id, '()', body FROM nodes JOIN traverse ON id = x
   UNION

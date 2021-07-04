@@ -160,7 +160,7 @@ def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        for row in cursor.execute(neighbors_fn(), (json.dumps(src),)):
+        for row in cursor.execute(neighbors_fn(), {'source': src}):
             if row:
                 identifier = row[0]
                 if identifier not in path:
@@ -176,7 +176,7 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
         path = []
         target = json.dumps(tgt)
         header = None
-        for row in cursor.execute(neighbors_fn(True), (json.dumps(src),)):
+        for row in cursor.execute(neighbors_fn(True), {'source': src}):
             if not header:
                 header = row
                 continue
