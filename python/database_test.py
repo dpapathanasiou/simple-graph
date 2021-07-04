@@ -111,13 +111,24 @@ def test_search(database_test_file, apple, nodes):
 
 
 def test_traversal(database_test_file, apple):
-    assert db.traverse(database_test_file, 2, 3) == ['2', '1', '3']
-    assert db.traverse(database_test_file, 4, 5) == ['4', '1', '2', '3', '5']
+    assert db.traverse(database_test_file, 2, 3) == [2, '1', '3']
+    assert db.traverse(database_test_file, '2', '3') == [
+        '2', '1', '3', '4', '5']
+    assert db.traverse(database_test_file, 4, 5) == [
+        4, '1', '2', '3', '4', '5']
+    assert db.traverse(database_test_file, '4', '5') == [
+        '4', '1', '2', '3', '5']
     assert db.traverse(database_test_file, 5,
+                       neighbors_fn=db.find_inbound_neighbors) == [5]
+    assert db.traverse(database_test_file, '5',
                        neighbors_fn=db.find_inbound_neighbors) == ['5']
     assert db.traverse(database_test_file, 5,
+                       neighbors_fn=db.find_outbound_neighbors) == [5, '1', '4']
+    assert db.traverse(database_test_file, '5',
                        neighbors_fn=db.find_outbound_neighbors) == ['5', '1', '4']
     assert db.traverse(database_test_file, 5, neighbors_fn=db.find_neighbors) == [
+        5, '1', '2', '3', '4', '5']
+    assert db.traverse(database_test_file, '5', neighbors_fn=db.find_neighbors) == [
         '5', '1', '2', '3', '4']
 
 
