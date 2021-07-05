@@ -67,6 +67,13 @@ def test_bulk_operations(database_test_file, nodes, edges):
     db.atomic(database_test_file, db.add_nodes(bodies, ids))
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
+
+    # bulk upsert and confirm
+    db.atomic(database_test_file, db.upsert_nodes(bodies, ids))
+    for id, node in nodes.items():
+        assert db.atomic(database_test_file, db.find_node(id)) == node
+
+    # bulk connect and confirm
     sources = []
     targets = []
     properties = []
@@ -80,7 +87,6 @@ def test_bulk_operations(database_test_file, nodes, edges):
             else:
                 properties.append({})
 
-    # bulk connect and confirm
     db.atomic(database_test_file, db.connect_many_nodes(
         sources, targets, properties))
     for src, tgts in edges.items():
