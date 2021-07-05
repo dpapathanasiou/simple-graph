@@ -111,13 +111,24 @@ def test_search(database_test_file, apple, nodes):
 
 
 def test_traversal(database_test_file, apple):
+    # the traversal CTE seed type is respected, and appears in the output as-is
     assert db.traverse(database_test_file, 2, 3) == [2, '1', '3']
+    # singly-quoted strings works as expected
     assert db.traverse(database_test_file, '2', '3') == [
         '2', '1', '3', '4', '5']
+    # and so do doubly-quoted values (in the prior version, these produced empty lists)
+    assert db.traverse(database_test_file, "2", "3") == [
+        '2', '1', '3', '4', '5']
+
+    # more test sets of this pattern:
+    # since int is a different type than string, it can appear twice in the output
     assert db.traverse(database_test_file, 4, 5) == [
         4, '1', '2', '3', '4', '5']
     assert db.traverse(database_test_file, '4', '5') == [
         '4', '1', '2', '3', '5']
+    assert db.traverse(database_test_file, "4", "5") == [
+        '4', '1', '2', '3', '5']
+
     assert db.traverse(database_test_file, 5,
                        neighbors_fn=db.find_inbound_neighbors) == [5]
     assert db.traverse(database_test_file, '5',
@@ -129,6 +140,8 @@ def test_traversal(database_test_file, apple):
     assert db.traverse(database_test_file, 5, neighbors_fn=db.find_neighbors) == [
         5, '1', '2', '3', '4', '5']
     assert db.traverse(database_test_file, '5', neighbors_fn=db.find_neighbors) == [
+        '5', '1', '2', '3', '4']
+    assert db.traverse(database_test_file, "5", neighbors_fn=db.find_neighbors) == [
         '5', '1', '2', '3', '4']
 
 
