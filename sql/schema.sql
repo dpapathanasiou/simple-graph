@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS edges (
     source     TEXT,
     target     TEXT,
     properties TEXT,
+    UNIQUE(source, target, properties) ON CONFLICT REPLACE,
     FOREIGN KEY(source) REFERENCES nodes(id),
     FOREIGN KEY(target) REFERENCES nodes(id)
 );
