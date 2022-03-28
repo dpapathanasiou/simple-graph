@@ -32,12 +32,20 @@ There are also traversal functions as native SQLite [Common Table Expressions](h
 
 # Usage
 
+## RESTful API (paid)
+
+The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database core with an API service ([swagger](https://banrai.net/static/swagger.html)), creating a no-admin database for both documents and graphs.
+
+## Importable library (free)
+
 Choose an implementation:
 
 * [Python](python) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
 * [Go](go)
+* [Julia](https://github.com/JuliaComputing/SQLiteGraph.jl) (courtesy of [Josh Day](https://github.com/joshday))
+* [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva ](https://github.com/mikeasilva))
 
-Want to contribute a version in your preferred language?
+Want to contribute an implementation in your preferred programming language?
 
 The [schema and prepared sql statements](sql) can be used by programs in *any* programming language with [SQLite bindings](https://en.wikipedia.org/wiki/SQLite#Programming_language_support). 
 
