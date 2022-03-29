@@ -2,6 +2,7 @@ import pytest
 import json
 from pathlib import Path
 from filecmp import cmp
+from stat import S_ISREG
 import database as db
 
 
@@ -52,7 +53,7 @@ def apple(database_test_file, nodes, edges):
 
 def test_initialize(database_test_file, apple):
     assert database_test_file.exists()
-    assert database_test_file.stat().st_size == 28672
+    assert S_ISREG(database_test_file.stat().st_mode)
 
 
 def test_bulk_operations(database_test_file, nodes, edges):
