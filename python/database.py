@@ -238,14 +238,11 @@ def visualize(db_file, dot_file, path=[], connections=get_connections, format='p
               exclude_node_keys=[], hide_node_key=False, node_kv=' ',
               exclude_edge_keys=[], hide_edge_key=False, edge_kv=' '):
 
-    def _unpack_edge(edge):
-        return [json.loads(item) for item in edge]
-
     ids = []
     for i in path:
-        ids.append(i)
+        ids.append(str(i))
         for edge in atomic(db_file, connections(i)):
-            src, tgt, _ = _unpack_edge(edge)
+            src, tgt, _ = edge
             if src not in ids:
                 ids.append(src)
             if tgt not in ids:
@@ -263,7 +260,8 @@ def visualize(db_file, dot_file, path=[], connections=get_connections, format='p
             dot.node(name, label=label)
             for edge in atomic(db_file, connections(i)):
                 if edge not in edges:
-                    src, tgt, props = _unpack_edge(edge)
+                    src, tgt, prps = edge
+                    props = json.loads(prps)
                     dot.edge(str(src), str(tgt), label=_as_dot_label(
                         props, exclude_edge_keys, hide_edge_key, edge_kv) if props else None)
                     edges.append(edge)

@@ -16,22 +16,22 @@ def database_test_file(tmp_path):
 @pytest.fixture()
 def nodes():
     return {
-        1: {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976'},
-        2: {'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder']},
-        3: {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder']},
-        4: {'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder']},
-        5: {'name': 'Mike Markkula', 'type': ['person', 'investor']}
+        1:   {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976'},
+        2:   {'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder']},
+        '3': {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder']},
+        4:   {'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder']},
+        5:   {'name': 'Mike Markkula', 'type': ['person', 'investor']}
     }
 
 
 @pytest.fixture()
 def edges():
     return {
-        1: [(4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'})],
-        2: [(1, {'action': 'founded'}), (3, None)],
-        3: [(1, {'action': 'founded'})],
-        4: [(1, {'action': 'founded'})],
-        5: [(1, {'action': 'invested', 'equity': 80000, 'debt': 170000})]
+        1:   [(4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'})],
+        2:   [(1, {'action': 'founded'}), ('3', None)],
+        '3': [(1, {'action': 'founded'})],
+        4:   [(1, {'action': 'founded'})],
+        5:   [(1, {'action': 'invested', 'equity': 80000, 'debt': 170000})]
     }
 
 
@@ -91,14 +91,14 @@ def test_bulk_operations(database_test_file, nodes, edges):
     db.atomic(database_test_file, db.connect_many_nodes(
         sources, targets, properties))
     for src, tgts in edges.items():
-        actual = [tuple(json.loads(x) for x in edge) for edge in db.atomic(
-            database_test_file, db.get_connections_one_way(src))]
+        actual = [tuple(x) for x in [[edge[0], edge[1], json.loads(edge[2])]
+                                     for edge in db.atomic(database_test_file, db.get_connections_one_way(src))]]
         for target in tgts:
             tgt, label = target
             if label:
-                expected = (src, tgt, label)
+                expected = (str(src), str(tgt), label)
             else:
-                expected = (src, tgt, {})
+                expected = (str(src), str(tgt), {})
             assert expected in actual
 
     # bulk remove and confirm
@@ -157,13 +157,13 @@ def test_traversal_with_bodies(database_test_file, apple):
         return [(x, y, json.loads(z)) for (x, y, z) in results]
 
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 2, 3)) == _normalize_results([('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), (
-        '2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), ('5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":3}')])
+        '2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), ('5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}')])
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_inbound_neighbors)) == _normalize_results(
         [('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}')])
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_outbound_neighbors)) == _normalize_results([('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'), ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), (
         '1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'), ('1', '->', '{"action":"founded"}')])
     assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_neighbors)) == _normalize_results([('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'), ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), ('1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), ('2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), (
-        '5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":3}'), ('2', '<-', '{}'), ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'), ('1', '<-', '{"action":"divested","amount":800,"date":"April 12, 1976"}')])
+        '5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}'), ('2', '<-', '{}'), ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'), ('1', '<-', '{"action":"divested","amount":800,"date":"April 12, 1976"}')])
 
 
 def test_visualization(database_test_file, apple, tmp_path):
