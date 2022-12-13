@@ -23,12 +23,16 @@ def read_sql(sql_file):
 
 
 def atomic(db_file, cursor_exec_fn):
-    connection = sqlite3.connect(db_file)
-    cursor = connection.cursor()
-    cursor.execute("PRAGMA foreign_keys = TRUE;")
-    results = cursor_exec_fn(cursor)
-    connection.commit()
-    connection.close()
+    connection = None
+    try:
+        connection = sqlite3.connect(db_file)
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys = TRUE;")
+        results = cursor_exec_fn(cursor)
+        connection.commit()        
+    finally:
+        if connection: 
+            connection.close()
     return results
 
 
