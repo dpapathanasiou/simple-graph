@@ -1,3 +1,5 @@
+import sqlite3
+
 import pytest
 import json
 from pathlib import Path
@@ -16,22 +18,22 @@ def database_test_file(tmp_path):
 @pytest.fixture()
 def nodes():
     return {
-        1:   {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976'},
-        2:   {'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder']},
+        1: {'name': 'Apple Computer Company', 'type': ['company', 'start-up'], 'founded': 'April 1, 1976'},
+        2: {'name': 'Steve Wozniak', 'type': ['person', 'engineer', 'founder']},
         '3': {'name': 'Steve Jobs', 'type': ['person', 'designer', 'founder']},
-        4:   {'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder']},
-        5:   {'name': 'Mike Markkula', 'type': ['person', 'investor']}
+        4: {'name': 'Ronald Wayne', 'type': ['person', 'administrator', 'founder']},
+        5: {'name': 'Mike Markkula', 'type': ['person', 'investor']}
     }
 
 
 @pytest.fixture()
 def edges():
     return {
-        1:   [(4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'})],
-        2:   [(1, {'action': 'founded'}), ('3', None)],
+        1: [(4, {'action': 'divested', 'amount': 800, 'date': 'April 12, 1976'})],
+        2: [(1, {'action': 'founded'}), ('3', None)],
         '3': [(1, {'action': 'founded'})],
-        4:   [(1, {'action': 'founded'})],
-        5:   [(1, {'action': 'invested', 'equity': 80000, 'debt': 170000})]
+        4: [(1, {'action': 'founded'})],
+        5: [(1, {'action': 'invested', 'equity': 80000, 'debt': 170000})]
     }
 
 
@@ -107,6 +109,23 @@ def test_bulk_operations(database_test_file, nodes, edges):
         assert db.atomic(database_test_file, db.find_node(id)) == {}
 
 
+def test_exception(database_test_file, apple, nodes):
+    node_id = 1
+    try:
+        db.atomic(database_test_file, db.add_node(nodes[node_id], node_id))
+    except sqlite3.IntegrityError as e: # should be thrown since we are inserting a duplicate node
+        assert 'UNIQUE constraint failed: nodes.id' in e.args
+
+    # Inserting a new node should work
+    new_node = {'name': 'Tim Cook', 'type': ['person', 'CEO']}
+    new_node_id = 6
+    try:
+        db.atomic(database_test_file, db.add_node(new_node, new_node_id))
+    except Exception as e:
+        assert False
+
+
+
 def test_search(database_test_file, apple, nodes):
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
@@ -156,14 +175,41 @@ def test_traversal_with_bodies(database_test_file, apple):
     def _normalize_results(results):
         return [(x, y, json.loads(z)) for (x, y, z) in results]
 
-    assert _normalize_results(db.traverse_with_bodies(database_test_file, 2, 3)) == _normalize_results([('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), (
-        '2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), ('5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}')])
-    assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_inbound_neighbors)) == _normalize_results(
+    assert _normalize_results(db.traverse_with_bodies(database_test_file, 2, 3)) == _normalize_results(
+        [('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'),
+         ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), (
+         '1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'),
+         (
+             '2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'),
+         ('4', '<-', '{"action":"founded"}'), ('5', '<-', '{"action":"invested","equity":80000,"debt":170000}'),
+         ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'),
+         ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}')])
+    assert _normalize_results(
+        db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_inbound_neighbors)) == _normalize_results(
         [('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}')])
-    assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_outbound_neighbors)) == _normalize_results([('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'), ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), (
-        '1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'), ('1', '->', '{"action":"founded"}')])
-    assert _normalize_results(db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_neighbors)) == _normalize_results([('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'), ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), ('1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'), ('2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'), (
-        '5', '<-', '{"action":"invested","equity":80000,"debt":170000}'), ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'), ('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'), ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'), ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}'), ('2', '<-', '{}'), ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'), ('1', '<-', '{"action":"divested","amount":800,"date":"April 12, 1976"}')])
+    assert _normalize_results(
+        db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_outbound_neighbors)) == _normalize_results(
+        [('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'),
+         ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), (
+             '1', '()',
+             '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'),
+         ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'),
+         ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'),
+         ('1', '->', '{"action":"founded"}')])
+    assert _normalize_results(
+        db.traverse_with_bodies(database_test_file, 5, neighbors_fn=db.find_neighbors)) == _normalize_results(
+        [('5', '()', '{"name":"Mike Markkula","type":["person","investor"],"id":5}'),
+         ('1', '->', '{"action":"invested","equity":80000,"debt":170000}'), (
+         '1', '()', '{"name":"Apple Computer Company","type":["company","start-up"],"founded":"April 1, 1976","id":1}'),
+         ('2', '<-', '{"action":"founded"}'), ('3', '<-', '{"action":"founded"}'), ('4', '<-', '{"action":"founded"}'),
+         (
+             '5', '<-', '{"action":"invested","equity":80000,"debt":170000}'),
+         ('4', '->', '{"action":"divested","amount":800,"date":"April 12, 1976"}'),
+         ('2', '()', '{"name":"Steve Wozniak","type":["person","engineer","founder"],"id":2}'),
+         ('1', '->', '{"action":"founded"}'), ('3', '->', '{}'),
+         ('3', '()', '{"name":"Steve Jobs","type":["person","designer","founder"],"id":"3"}'), ('2', '<-', '{}'),
+         ('4', '()', '{"name":"Ronald Wayne","type":["person","administrator","founder"],"id":4}'),
+         ('1', '<-', '{"action":"divested","amount":800,"date":"April 12, 1976"}')])
 
 
 def test_visualization(database_test_file, apple, tmp_path):
@@ -172,7 +218,7 @@ def test_visualization(database_test_file, apple, tmp_path):
     assert cmp(dot_raw, Path.cwd() / ".." / ".examples" / "apple-raw.dot")
     dot = tmp_path / "apple.dot"
     db.visualize(database_test_file, dot, [4, 1, 5], exclude_node_keys=[
-                 'type'], hide_edge_key=True)
+        'type'], hide_edge_key=True)
     assert cmp(dot, Path.cwd() / ".." / ".examples" / "apple.dot")
 
 
@@ -183,5 +229,5 @@ def test_visualize_bodies(database_test_file, apple, tmp_path):
     assert cmp(dot_raw, Path.cwd() / ".." / ".examples" / "apple-raw.dot")
     dot = tmp_path / "apple.dot"
     db.visualize_bodies(dot, path_with_bodies, exclude_node_keys=[
-                        'type'], hide_edge_key=True)
+        'type'], hide_edge_key=True)
     assert cmp(dot, Path.cwd() / ".." / ".examples" / "apple.dot")
