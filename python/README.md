@@ -26,21 +26,21 @@ Any single node or path of nodes can also be depicted graphically by using the `
 
 ## Testing
 
-There are [unit tests](database_test.py) in [pytest](https://docs.pytest.org/en/latest/) covering each of the basic functions.
+There are unit tests for both the [core functions](database_test.py) and [visualizers](visualizers_test.py) in [pytest](https://docs.pytest.org/en/latest/) covering each of the basic functions.
 
 If you have the correct version of SQLite installed, everything should just work without errors:
 
 ```sh
 $ pytest
-============================= test session starts ==============================
-platform linux -- Python 3.7.10, pytest-6.2.3, py-1.10.0, pluggy-0.13.1
-rootdir: /path/to/repos/simple-graph/python
-plugins: anyio-2.2.0
-collected 7 items                                                              
+================================ test session starts ================================
+platform linux -- Python 3.9.15, pytest-7.2.0, pluggy-1.0.0
+rootdir: /home/denis/repos/repos-git/simple-graph/python
+collected 8 items                                                                   
 
-database_test.py .......                                                 [100%]
+database_test.py ......                                                       [ 75%]
+visualizers_test.py ..                                                        [100%]
 
-============================== 7 passed in 0.92s ===============================
+================================= 8 passed in 1.09s =================================
 ```
 
 ### Example
@@ -95,7 +95,8 @@ Paths through the graph can be discovered with a starting node id, and an option
 Any path or list of nodes can rendered graphically by using the `visualize` function. This command produces [dot](https://graphviz.org/doc/info/lang.html) files, which are also rendered as images with Graphviz:
 
 ```
->>> db.visualize(apple, 'apple.dot', [4, 1, 5])
+>>> from visualizers import graphviz_visualize
+>>> graphviz_visualize(apple, 'apple.dot', [4, 1, 5])
 ```
 
 The [resulting text file](../.examples/apple-raw.dot) also comes with an associated image (the default is [png](https://en.wikipedia.org/wiki/Portable_Network_Graphics), but that can be changed by supplying a different value to the `format` parameter)
@@ -107,7 +108,7 @@ The default options include every key/value pair (excluding the id) in the node 
 There are display options to help refine what is produced:
 
 ```
->>> db.visualize(apple, 'apple.dot', [4, 1, 5], exclude_node_keys=['type'], hide_edge_key=True)
+>>> graphviz_visualize(apple, 'apple.dot', [4, 1, 5], exclude_node_keys=['type'], hide_edge_key=True)
 ```
 
 ![More refined visualization](../.examples/apple.png)
