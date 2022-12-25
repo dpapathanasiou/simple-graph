@@ -1,0 +1,4 @@
+{% if and_or %}{{ and_or }}{% endif %}
+{% if id_lookup %}id = ?{% endif %}
+{% if key_value %}json_extract(body, '$.{{ key }}') {{ predicate }} ?{% endif %}
+{% if tree %}{% if key %}(json_tree.key='{{ key }}' AND {% endif %}json_tree.value {{ predicate }} ?{% if key %}){% endif %}{% endif %}

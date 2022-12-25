@@ -1,0 +1,5 @@
+SELECT {{ result_column }} -- id|body
+FROM nodes{% if tree %}, json_tree(body{% if key %}, '$.{{ key }}'{% endif %}){% endif %}{% if search_clauses %}
+WHERE {% for search_clause in search_clauses %}
+    {{ search_clause }}
+{% endfor %}{% endif %}

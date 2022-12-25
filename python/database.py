@@ -13,12 +13,27 @@ import sqlite3
 import json
 import pathlib
 from functools import lru_cache
+from jinja2 import Environment, BaseLoader, select_autoescape
 
 
 @lru_cache(maxsize=None)
 def read_sql(sql_file):
     with open(pathlib.Path.cwd() / ".." / "sql" / sql_file) as f:
         return f.read()
+
+
+class SqlTemplateLoader(BaseLoader):
+    def get_source(self, environment, template):
+        return read_sql(template), template, True
+
+
+env = Environment(
+    loader=SqlTemplateLoader(),
+    autoescape=select_autoescape()
+)
+
+clause_template = env.get_template('search-where.template')
+search_template = env.get_template('search-node.template')
 
 
 def atomic(db_file, cursor_exec_fn):
@@ -126,8 +141,9 @@ def _parse_search_results(results, idx=0):
 
 def find_node(identifier):
     def _find_node(cursor):
-        result = cursor.execute(
-            read_sql('search-node-by-id.sql'), (identifier,)).fetchone()
+        query = search_template.render(result_column='body',
+                                       search_clauses=[clause_template.render(id_lookup=True)])
+        result = cursor.execute(query, (identifier,)).fetchone()
         return {} if not result else json.loads(result[0])
     return _find_node
 
