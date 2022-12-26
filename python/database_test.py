@@ -78,13 +78,38 @@ def test_exception(database_test_file, apple, nodes):
 
 
 def test_search(database_test_file, apple, nodes):
+    # search by id
     for id, node in nodes.items():
         assert db.atomic(database_test_file, db.find_node(id)) == node
-    steves = db.atomic(database_test_file, db.find_nodes(
-        {'name': 'Steve'}, db._search_like, db._search_starts_with))
+
+    # simple key-value search using 'LIKE'
+    kv_name_like = db._generate_clause('name', predicate='LIKE')
+    steves = db.atomic(database_test_file,
+                       db.find_nodes([kv_name_like],
+                                     ('Steve%',)))
     assert len(steves) == 2
-    assert list(map(lambda x: x['name'], steves)) == [
-        'Steve Wozniak', 'Steve Jobs']
+    assert list(map(lambda x: x['name'], steves)) == ['Steve Wozniak',
+                                                      'Steve Jobs']
+
+    # plus an additional binding on the same key to find a different person
+    kv_other_name = db._generate_clause('name', predicate='LIKE', joiner='OR')
+    woz_mike = db.atomic(database_test_file,
+                         db.find_nodes([kv_name_like, kv_other_name],
+                                       ('%Woz%', '%Markkula',)))
+    assert len(woz_mike) == 2
+    assert list(map(lambda x: x['name'], woz_mike)) == ['Steve Wozniak',
+                                                        'Mike Markkula']
+
+    # a tree search to find all the people with 'founder' in their 'type' list
+    founders = db.atomic(database_test_file,
+                         db.find_nodes([db._generate_clause('type', tree=True)],
+                                       ('founder',),
+                                       tree_query=True,
+                                       key='type'))
+    assert len(founders) == 3
+    assert list(map(lambda x: x['name'], founders)) == ['Steve Wozniak',
+                                                        'Steve Jobs',
+                                                        'Ronald Wayne']
 
 
 def test_traversal(database_test_file, apple):

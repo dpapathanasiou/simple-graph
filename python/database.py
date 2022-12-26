@@ -135,42 +135,58 @@ def remove_nodes(identifiers):
     return _remove_node
 
 
-def _parse_search_results(results, idx=0):
-    return [json.loads(item[idx]) for item in results]
+def _generate_clause(key, predicate=None, joiner=None, tree=False, tree_with_key=False):
+    '''Given at minimum a key in the body json, generate a query clause
+    which can be bound to a corresponding value at point of execution'''
+
+    if predicate is None:
+        predicate = '='  # can also be 'LIKE', '>', '<'
+    if joiner is None:
+        joiner = ''  # 'AND', 'OR', 'NOT'
+
+    if tree:
+        if tree_with_key:
+            return clause_template.render(and_or=joiner, key=key, tree=tree, predicate=predicate)
+        else:
+            return clause_template.render(and_or=joiner, tree=tree, predicate=predicate)
+
+    return clause_template.render(and_or=joiner, key=key, predicate=predicate, key_value=True)
+
+
+def _generate_query(where_clauses, result_column=None, key=None, tree=False):
+    '''Generate the search query, selecting either the id or the body,
+    adding the json_tree function and optionally the key, as needed'''
+
+    if result_column is None:
+        result_column = 'body'  # can also be 'id'
+
+    if tree:
+        if key:
+            return search_template.render(result_column=result_column, tree=tree, key=key, search_clauses=where_clauses)
+        else:
+            return search_template.render(result_column=result_column, tree=tree, search_clauses=where_clauses)
+
+    return search_template.render(result_column=result_column, search_clauses=where_clauses)
 
 
 def find_node(identifier):
     def _find_node(cursor):
-        query = search_template.render(result_column='body',
-                                       search_clauses=[clause_template.render(id_lookup=True)])
+        query = _generate_query([clause_template.render(id_lookup=True)])
         result = cursor.execute(query, (identifier,)).fetchone()
         return {} if not result else json.loads(result[0])
     return _find_node
 
 
-def _search_where(properties, predicate='='):
-    return " AND ".join([f"json_extract(body, '$.{key}') {predicate} ?" for key in properties.keys()])
+def _parse_search_results(results, idx=0):
+    print(results)
+    return [json.loads(item[idx]) for item in results]
 
 
-def _search_like(properties):
-    return _search_where(properties, 'LIKE')
-
-
-def _search_equals(properties):
-    return tuple([str(v) for v in properties.values()])
-
-
-def _search_starts_with(properties):
-    return tuple([str(v)+'%' for v in properties.values()])
-
-
-def _search_contains(properties):
-    return tuple(['%'+str(v)+'%' for v in properties.values()])
-
-
-def find_nodes(data, where_fn=_search_where, search_fn=_search_equals):
+def find_nodes(where_clauses, bindings, tree_query=False, key=None):
     def _find_nodes(cursor):
-        return _parse_search_results(cursor.execute(read_sql('search-node.sql') + where_fn(data), search_fn(data)).fetchall())
+        query = _generate_query(where_clauses, key=key, tree=tree_query)
+        print(query)
+        return _parse_search_results(cursor.execute(query, bindings).fetchall())
     return _find_nodes
 
 
