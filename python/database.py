@@ -202,31 +202,23 @@ def find_inbound_neighbors(with_bodies=False):
     return traverse_template.render(with_bodies=with_bodies, inbound=True)
 
 
-def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors):
+def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors, with_bodies=False):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        for row in cursor.execute(neighbors_fn(), (src,)):
+        for row in cursor.execute(neighbors_fn(with_bodies=with_bodies), (src,)):
             if row:
-                identifier = row[0]
-                if identifier not in path:
-                    path.append(identifier)
-                if identifier == target:
-                    break
-        return path
-    return atomic(db_file, _traverse)
-
-
-def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
-    def _traverse(cursor):
-        path = []
-        target = json.dumps(tgt)
-        for row in cursor.execute(neighbors_fn(with_bodies=True), (src,)):
-            if row:
-                identifier, obj, _ = row
-                path.append(row)
-                if identifier == target and obj == '()':
-                    break
+                if with_bodies:
+                    identifier, obj, _ = row
+                    path.append(row)
+                    if identifier == target and obj == '()':
+                        break
+                else:
+                    identifier = row[0]
+                    if identifier not in path:
+                        path.append(identifier)
+                        if identifier == target:
+                            break
         return path
     return atomic(db_file, _traverse)
 

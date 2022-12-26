@@ -17,7 +17,7 @@ def test_visualization(database_test_file, apple, tmp_path):
 
 def test_visualize_bodies(database_test_file, apple, tmp_path):
     dot_raw = tmp_path / "apple-raw.dot"
-    path_with_bodies = db.traverse_with_bodies(database_test_file, 4, 5)
+    path_with_bodies = db.traverse(database_test_file, 4, 5, with_bodies=True)
     graphviz_visualize_bodies(dot_raw, path_with_bodies)
     assert cmp(dot_raw, Path.cwd() / ".." / ".examples" / "apple-raw.dot")
     dot = tmp_path / "apple.dot"
