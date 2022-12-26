@@ -43,7 +43,8 @@ Choose an implementation:
 * [Python](python) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
 * [Go](go)
 * [Julia](https://github.com/JuliaComputing/SQLiteGraph.jl) (courtesy of [Josh Day](https://github.com/joshday))
-* [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva ](https://github.com/mikeasilva))
+* [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva](https://github.com/mikeasilva))
+* [Flutter and Dart](https://github.com/rodydavis/flutter_graph_database) (courtesy of [Rody Davis](https://github.com/rodydavis))
 
 Want to contribute an implementation in your preferred programming language?
 
