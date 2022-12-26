@@ -185,7 +185,6 @@ def _parse_search_results(results, idx=0):
 def find_nodes(where_clauses, bindings, tree_query=False, key=None):
     def _find_nodes(cursor):
         query = _generate_query(where_clauses, key=key, tree=tree_query)
-        print(query)
         return _parse_search_results(cursor.execute(query, bindings).fetchall())
     return _find_nodes
 
