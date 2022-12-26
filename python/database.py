@@ -191,22 +191,22 @@ def find_nodes(where_clauses, bindings, tree_query=False, key=None):
 
 
 def find_neighbors(with_bodies=False):
-    return read_sql("traverse-with-bodies.sql") if with_bodies else read_sql('traverse.sql')
+    return traverse_template.render(with_bodies=with_bodies, inbound=True, outbound=True)
 
 
 def find_outbound_neighbors(with_bodies=False):
-    return read_sql("traverse-with-bodies-outbound.sql") if with_bodies else read_sql('traverse-outbound.sql')
+    return traverse_template.render(with_bodies=with_bodies, outbound=True)
 
 
 def find_inbound_neighbors(with_bodies=False):
-    return read_sql("traverse-with-bodies-inbound.sql") if with_bodies else read_sql('traverse-inbound.sql')
+    return traverse_template.render(with_bodies=with_bodies, inbound=True)
 
 
 def traverse(db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        for row in cursor.execute(neighbors_fn(), {'source': src}):
+        for row in cursor.execute(neighbors_fn(), (src,)):
             if row:
                 identifier = row[0]
                 if identifier not in path:
@@ -221,11 +221,7 @@ def traverse_with_bodies(db_file, src, tgt=None, neighbors_fn=find_neighbors):
     def _traverse(cursor):
         path = []
         target = json.dumps(tgt)
-        header = None
-        for row in cursor.execute(neighbors_fn(True), {'source': src}):
-            if not header:
-                header = row
-                continue
+        for row in cursor.execute(neighbors_fn(with_bodies=True), (src,)):
             if row:
                 identifier, obj, _ = row
                 path.append(row)

@@ -1,0 +1,9 @@
+WITH RECURSIVE traverse(x{% if with_bodies %}, y, obj{% endif %}) AS (
+  SELECT id{% if with_bodies %}, '()', body {% endif %} FROM nodes WHERE id = ?
+  UNION
+  SELECT id{% if with_bodies %}, '()', body {% endif %} FROM nodes JOIN traverse ON id = x
+  {% if inbound %}UNION
+  SELECT source{% if with_bodies %}, '<-', properties {% endif %} FROM edges JOIN traverse ON target = x{% endif %}
+  {% if outbound %}UNION
+  SELECT target{% if with_bodies %}, '->', properties {% endif %} FROM edges JOIN traverse ON source = x{% endif %}
+) SELECT x{% if with_bodies %}, y, obj {% endif %} FROM traverse;
