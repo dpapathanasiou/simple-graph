@@ -34,6 +34,7 @@ env = Environment(
 
 clause_template = env.get_template('search-where.template')
 search_template = env.get_template('search-node.template')
+traverse_template = env.get_template('traverse.template')
 
 
 def atomic(db_file, cursor_exec_fn):
