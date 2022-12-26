@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS edges (
     source     TEXT,
     target     TEXT,
     properties TEXT,
+    UNIQUE(source, target, properties) ON CONFLICT REPLACE,
     FOREIGN KEY(source) REFERENCES nodes(id),
     FOREIGN KEY(target) REFERENCES nodes(id)
 );
@@ -43,65 +44,31 @@ UNION
 SELECT * FROM edges WHERE target = ?
 `
 
-    SearchNodeById = `SELECT body FROM nodes WHERE id = ?
-`
-
-    SearchNode = `SELECT body FROM nodes WHERE 
-`
-
-    TraverseInbound = `WITH RECURSIVE traverse(id) AS (
-  SELECT ?
-  UNION
-  SELECT source FROM edges JOIN traverse ON target = id
-) SELECT id FROM traverse;
-`
-
-    TraverseOutbound = `WITH RECURSIVE traverse(id) AS (
-  SELECT ?
-  UNION
-  SELECT target FROM edges JOIN traverse ON source = id
-) SELECT id FROM traverse;
-`
-
-    Traverse = `WITH RECURSIVE traverse(id) AS (
-  SELECT ?
-  UNION
-  SELECT source FROM edges JOIN traverse ON target = id
-  UNION
-  SELECT target FROM edges JOIN traverse ON source = id
-) SELECT id FROM traverse;
-`
-
-    TraverseWithBodiesInbound = `WITH RECURSIVE traverse(x, y, obj) AS (
-  SELECT ?, '()', '{}'
-  UNION
-  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
-  UNION
-  SELECT source, '<-', properties FROM edges JOIN traverse ON target = x
-) SELECT x, y, obj FROM traverse;
-`
-
-    TraverseWithBodiesOutbound = `WITH RECURSIVE traverse(x, y, obj) AS (
-  SELECT ?, '()', '{}'
-  UNION
-  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
-  UNION
-  SELECT target, '->', properties FROM edges JOIN traverse ON source = x
-) SELECT x, y, obj FROM traverse;
-`
-
-    TraverseWithBodies = `WITH RECURSIVE traverse(x, y, obj) AS (
-  SELECT ?, '()', '{}'
-  UNION
-  SELECT id, '()', body FROM nodes JOIN traverse ON id = x
-  UNION
-  SELECT source, '<-', properties FROM edges JOIN traverse ON target = x
-  UNION
-  SELECT target, '->', properties FROM edges JOIN traverse ON source = x
-) SELECT x, y, obj FROM traverse;
-`
-
     UpdateNode = `UPDATE nodes SET body = json(?) WHERE id = ?
+`
+
+    SearchNodeTemplate = `SELECT {{ .ResultColumn }} -- id|body
+From nodes{{ if .Tree }}, jsonTree(body{{ if .Key }}, '$.{{ .Key }}'{{ end }}){{ end }}{{ if .SearchClauses }}
+WHERE {{ range .SearchClauses }}
+    {{ .SearchClause }}
+{{ end }}{{ end }}
+`
+
+    SearchWhereTemplate = `{{ if .AndOr }}{{ .AndOr }}{{ end }}
+{{ if .IdLookup }}id = ?{{ end }}
+{{ if .KeyValue }}jsonExtract(body, '$.{{ .Key }}') {{ .Predicate }} ?{{ end }}
+{{ if .Tree }}{{ if .Key }}(jsonTree.key='{{ .Key }}' and {{ end }}jsonTree.value {{ .Predicate }} ?{{ if .Key }}){{ end }}{{ end }}
+`
+
+    TraverseTemplate = `WITH RECURSIVE traverse(x{{ if .WithBodies }}, y, obj{{ end }}) AS (
+  SELECT id{{ if .WithBodies }}, '()', body {{ end }} FROM nodes WHERE id = ?
+  UNION
+  SELECT id{{ if .WithBodies }}, '()', body {{ end }} FROM nodes JOIN traverse ON id = x
+  {{ if .Inbound }}UNION
+  SELECT source{{ if .WithBodies }}, '<-', properties {{ end }} from edges join traverse on target = x{{ end }}
+  {{ if .Outbound }}UNION
+  SELECT target{{ if .WithBodies }}, '->', properties {{ end }} from edges join traverse on source = x{{ end }}
+) SELECT x{{ if .WithBodies }}, y, obj {{ end }} FROM traverse;
 `
 
 )
