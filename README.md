@@ -34,7 +34,7 @@ There are also traversal functions as native SQLite [Common Table Expressions](h
 
 ## RESTful API (paid)
 
-The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database core with an API service ([swagger](https://banrai.net/static/swagger.html)), creating a no-admin database for both documents and graphs.
+The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database core with an API service, creating a no-admin database for both documents and graphs.
 
 ## Importable library (free)
 
