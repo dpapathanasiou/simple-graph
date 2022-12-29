@@ -41,13 +41,18 @@ func TestVisualization(t *testing.T) {
 		t.Errorf("Visualize() produced string of len %d but expected %d", len(dot), expected)
 	}
 
-	bodies, traverseErr := TraverseWithBodiesFromTo("A", "E", TraverseWithBodies, file)
+	basicTraversalWithBodies := GenerateTraversal(&Traversal{WithBodies: true, Inbound: true, Outbound: true})
+	bodies, traverseErr := TraverseWithBodiesFromTo("A", "E", basicTraversalWithBodies, file)
+
 	if traverseErr != nil {
 		t.Errorf("TraverseWithBodiesFromTo() resulted in %q but nil", traverseErr.Error())
 	}
+
 	dot = VisualizeBodies(bodies, file)
 	expected = 1247
+
 	if len(dot) != expected {
 		t.Errorf("VisualizeBodies() produced string of len %d but expected %d", len(dot), expected)
 	}
+
 }

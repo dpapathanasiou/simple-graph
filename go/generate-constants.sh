@@ -21,7 +21,7 @@ done
 # template files: need updating to go syntax (https://pkg.go.dev/text/template)
 for file in $(ls ../sql/*.template)
 do
-  sql=$(cat $file | sed 's/{% endif %}/{{ end }}/g;s/{% endfor %}/{{ end }}/g;s/{% if/{{ if/g;s/{% for [a-zA-Z_]\+ in /{{ range /g;s/ %}/ }}/g;s/[^_]\+ }}/\L\u& }}/g;s/_//g;s/[a-zA-Z_]\+ }}/\.\u&/g;s/ }} }}/ }}/g;s/{{ .End }}/{{ end }}/g')
+  sql=$(cat $file | sed 's/{% endif %}/{{ end }}/g;s/{% endfor %}/{{ end }}/g;s/{% if/{{ if/g;s/{% for [a-zA-Z_]\+ in /{{ range /g;s/ %}/ }}/g;s/[^_]\+ }}/\L\u& }}/g;s/_//g;s/[a-zA-Z_]\+ }}/\.\u&/g;s/ }} }}/ }}/g;s/{{ .End }}/{{ end }}/g;s/jsonExtract/json_extract/g;s/jsonTree/json_tree/g;s/{{ .SearchClause }}/{{ . }}/')
   val=$(basename $file | sed 's/\.template/-template/;s/[^-]\+/\L\u&/g;s/-//g')
   echo "    $val = \`$sql" >> $target
   echo '`\n' >> $target

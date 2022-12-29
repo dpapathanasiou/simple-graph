@@ -10,7 +10,7 @@ const (
 	woz      = `{"id":"2","name":"Steve Wozniak","type":["person","engineer","founder"]}`
 	wozNick  = `{"name":"Steve Wozniak","type":["person","engineer","founder"],"nickname":"Woz","id":"2"}`
 	jobs     = `{"id":"3","name":"Steve Jobs","type":["person","designer","founder"]}`
-	wayne    = `{"name":"Ronald Wayne","type":["person","administrator","founder"]}`
+	wayne    = `{"id":"4","name":"Ronald Wayne","type":["person","administrator","founder"]}`
 	markkula = `{"name":"Mike Markkula","type":["person","investor"]}`
 	founded  = `{"action":"founded"}`
 	invested = `{"action":"invested","equity":80000,"debt":170000}`
@@ -75,53 +75,16 @@ func resultContains(slice []GraphData, val GraphData) bool {
 }
 
 func TestGenerateSearchStatement(t *testing.T) {
-	where := generateSearchEquals(map[string]string{"name": "Steve"})
-	single := "json_extract(body, '$.name') = ?"
-	if where != single {
-		t.Errorf("generateSearchEquals() = %q but expected %q", where, single)
+	kvNameLikeClause := "\n\njson_extract(body, '$.name') LIKE ?\n\n"
+	kvNameLike := GenerateWhereClause(&WhereClause{KeyValue: true, Key: "name", Predicate: "LIKE"})
+	if kvNameLike != kvNameLikeClause {
+		t.Errorf("generateWhereClause() = %q but expected %q", kvNameLike, kvNameLikeClause)
 	}
 
-	props := map[string]string{"name": "Steve", "type": "founder"}
-	where = generateSearchLike(props)
-	multiple := "json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
-	multipleReversed := "json_extract(body, '$.type') LIKE ? AND json_extract(body, '$.name') LIKE ?"
-	if where != multiple && where != multipleReversed {
-		t.Errorf("generateSearchLike() = %q but expected %q", where, multiple)
-	}
-
-	where = generateSearchStatement(props, true)
-	sql := "SELECT body FROM nodes WHERE json_extract(body, '$.name') = ? AND json_extract(body, '$.type') = ?"
-	sqlReversed := "SELECT body FROM nodes WHERE json_extract(body, '$.type') = ? AND json_extract(body, '$.name') = ?"
-	if where != sql && where != sqlReversed {
-		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
-	}
-
-	where = generateSearchStatement(props, false)
-	sql = "SELECT body FROM nodes WHERE json_extract(body, '$.name') LIKE ? AND json_extract(body, '$.type') LIKE ?"
-	sqlReversed = "SELECT body FROM nodes WHERE json_extract(body, '$.type') LIKE ? AND json_extract(body, '$.name') LIKE ?"
-	if where != sql && where != sqlReversed {
-		t.Errorf("generateSearchStatement() = %q but expected %q", where, sql)
-	}
-
-	equality := []string{"Steve", "founder"}
-	for _, binding := range generateSearchBindings(props, false, false) {
-		if !arrayContains(equality, binding) {
-			t.Errorf("generateSearchBindings() was missing %q", binding)
-		}
-	}
-
-	startsWith := []string{"Steve%", "founder%"}
-	for _, binding := range generateSearchBindings(props, true, false) {
-		if !arrayContains(startsWith, binding) {
-			t.Errorf("generateSearchBindings() was missing %q", binding)
-		}
-	}
-
-	contains := []string{"%Steve%", "%founder%"}
-	for _, binding := range generateSearchBindings(props, false, true) {
-		if !arrayContains(contains, binding) {
-			t.Errorf("generateSearchBindings() was missing %q", binding)
-		}
+	treeValueWithOrClause := "OR\n\n\njson_tree.value = ?\n"
+	treeValueWithOr := GenerateWhereClause(&WhereClause{AndOr: "OR", Tree: true, Predicate: "="})
+	if treeValueWithOr != treeValueWithOrClause {
+		t.Errorf("generateWhereClause() = %q but expected %q", treeValueWithOr, treeValueWithOrClause)
 	}
 }
 
@@ -259,7 +222,10 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,%q", node, err.Error(), "", NO_ROWS_FOUND)
 	}
 
-	nodes, err := FindNodes(map[string]string{"name": "Steve"}, true, false, file)
+	kvNameLike := GenerateWhereClause(&WhereClause{KeyValue: true, Key: "name", Predicate: "LIKE"})
+	statement := GenerateSearchStatement(&SearchQuery{ResultColumn: "body", SearchClauses: []string{kvNameLike}})
+
+	nodes, err := FindNodes(statement, []string{"Steve%"}, file)
 	if err != nil {
 		t.Errorf("FindNodes() produced an error %s but expected nil", err.Error())
 	}
@@ -285,7 +251,25 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		t.Errorf("FindNode() produced %q,%q but expected %q,nil", node, err.Error(), apple)
 	}
 
-	idList, traverseErr := TraverseFromTo("2", "3", Traverse, file)
+	arrayType := GenerateWhereClause(&WhereClause{Tree: true, Predicate: "="})
+	statement = GenerateSearchStatement(&SearchQuery{ResultColumn: "body", Tree: true, Key: "type", SearchClauses: []string{arrayType}})
+
+	nodes, err = FindNodes(statement, []string{"founder"}, file)
+	if err != nil {
+		t.Errorf("FindNodes() produced an error %s but expected nil", err.Error())
+	}
+	if !arrayContains(nodes, wozNick) {
+		t.Errorf("FindNodes() did not return %s as expected", woz)
+	}
+	if !arrayContains(nodes, jobs) {
+		t.Errorf("FindNodes() did not return %s as expected", jobs)
+	}
+	if !arrayContains(nodes, wayne) {
+		t.Errorf("FindNodes() did not return %s as expected", wayne)
+	}
+
+	basicTraversal := GenerateTraversal(&Traversal{WithBodies: false, Inbound: true, Outbound: true})
+	idList, traverseErr := TraverseFromTo("2", "3", basicTraversal, file)
 	if traverseErr != nil {
 		t.Errorf("TraverseFromTo() produced an error %s but expected nil", traverseErr.Error())
 	}
@@ -295,7 +279,8 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
-	idList, traverseErr = TraverseFrom("5", TraverseInbound, file)
+	basicTraversalInbound := GenerateTraversal(&Traversal{WithBodies: false, Inbound: true, Outbound: false})
+	idList, traverseErr = TraverseFrom("5", basicTraversalInbound, file)
 	if traverseErr != nil {
 		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
 	}
@@ -305,7 +290,8 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
-	idList, traverseErr = TraverseFrom("5", TraverseOutbound, file)
+	basicTraversalOutbound := GenerateTraversal(&Traversal{WithBodies: false, Inbound: false, Outbound: true})
+	idList, traverseErr = TraverseFrom("5", basicTraversalOutbound, file)
 	if traverseErr != nil {
 		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
 	}
@@ -315,7 +301,7 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
-	idList, traverseErr = TraverseFrom("5", Traverse, file)
+	idList, traverseErr = TraverseFrom("5", basicTraversal, file)
 	if traverseErr != nil {
 		t.Errorf("TraverseFrom() produced an error %s but expected nil", traverseErr.Error())
 	}
@@ -325,8 +311,9 @@ func TestInitializeAndCrudAndSearch(t *testing.T) {
 		}
 	}
 
+	basicTraversalWithBodies := GenerateTraversal(&Traversal{WithBodies: true, Inbound: true, Outbound: true})
 	nilNode := NodeData{Identifier: nil, Body: nil}
-	bodies, traverseWithErr := TraverseWithBodiesFromTo("2", "3", TraverseWithBodies, file)
+	bodies, traverseWithErr := TraverseWithBodiesFromTo("2", "3", basicTraversalWithBodies, file)
 	if traverseWithErr != nil {
 		t.Errorf("TraverseWithBodiesFromTo() produced an error %s but expected nil", traverseWithErr.Error())
 	}

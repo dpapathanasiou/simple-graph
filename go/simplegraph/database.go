@@ -9,6 +9,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -36,6 +37,34 @@ type GraphData struct {
 	Node NodeData
 	Edge EdgeData
 }
+
+type SearchQuery struct {
+	ResultColumn  string
+	Key           string
+	Tree          bool
+	SearchClauses []string
+}
+
+type WhereClause struct {
+	AndOr     string
+	IdLookup  bool
+	KeyValue  bool
+	Key       string
+	Tree      bool
+	Predicate string
+}
+
+type Traversal struct {
+	WithBodies bool
+	Inbound    bool
+	Outbound   bool
+}
+
+var (
+	CLAUSE_TEMPLATE   = template.Must(template.New("where").Parse(SearchWhereTemplate))
+	SEARCH_TEMPLATE   = template.Must(template.New("search").Parse(SearchNodeTemplate))
+	TRAVERSE_TEMPLATE = template.Must(template.New("traverse").Parse(TraverseTemplate))
+)
 
 func resolveDbFileReference(names ...string) (string, error) {
 	args := len(names)
@@ -277,7 +306,9 @@ func RemoveNodes(identifiers []string, database ...string) bool {
 
 func FindNode(identifier string, database ...string) (string, error) {
 	find := func(db *sql.DB) (string, error) {
-		stmt, err := db.Prepare(SearchNodeById)
+		clause := GenerateWhereClause(&WhereClause{IdLookup: true})
+		search := GenerateSearchStatement(&SearchQuery{ResultColumn: "body", SearchClauses: []string{clause}})
+		stmt, err := db.Prepare(search)
 		evaluate(err)
 		defer stmt.Close()
 		var body string
@@ -328,48 +359,25 @@ func UpsertNode(identifier string, body string, database ...string) error {
 	}
 }
 
-func generateWhereClauseForSearch(properties map[string]string, predicate string) string {
-	clauses := []string{}
-	for key := range properties {
-		clause := strings.Builder{}
-		fmt.Fprintf(&clause, "json_extract(body, '$.%s') %s ?", key, predicate)
-		clauses = append(clauses, clause.String())
-	}
-	return strings.Join(clauses, " AND ")
+func GenerateWhereClause(properties *WhereClause) string {
+	var clause bytes.Buffer
+	err := CLAUSE_TEMPLATE.Execute(&clause, properties)
+	evaluate(err)
+	return clause.String()
 }
 
-func generateSearchEquals(properties map[string]string) string {
-	return generateWhereClauseForSearch(properties, "=")
+func GenerateSearchStatement(properties *SearchQuery) string {
+	var clause bytes.Buffer
+	err := SEARCH_TEMPLATE.Execute(&clause, properties)
+	evaluate(err)
+	return clause.String()
 }
 
-func generateSearchLike(properties map[string]string) string {
-	return generateWhereClauseForSearch(properties, "LIKE")
-}
-
-func generateSearchStatement(properties map[string]string, equality bool) string {
-	var where string
-	if equality {
-		where = generateSearchEquals(properties)
-	} else {
-		where = generateSearchLike(properties)
-	}
-	return fmt.Sprintf("%s %s", strings.TrimSpace(SearchNode), where)
-}
-
-func generateSearchBindings(properties map[string]string, startsWith bool, contains bool) []string {
-	bindings := []string{}
-	for _, val := range properties {
-		var binding string
-		if startsWith {
-			binding = fmt.Sprintf("%s%%", val)
-		} else if contains {
-			binding = fmt.Sprintf("%%%s%%", val)
-		} else {
-			binding = val
-		}
-		bindings = append(bindings, binding)
-	}
-	return bindings
+func GenerateTraversal(properties *Traversal) string {
+	var clause bytes.Buffer
+	err := TRAVERSE_TEMPLATE.Execute(&clause, properties)
+	evaluate(err)
+	return clause.String()
 }
 
 func convertSearchBindingsToParameters(bindings []string) []interface{} {
@@ -380,15 +388,7 @@ func convertSearchBindingsToParameters(bindings []string) []interface{} {
 	return params
 }
 
-func FindNodes(properties map[string]string, startsWith bool, contains bool, database ...string) ([]string, error) {
-	var statement string
-	if startsWith || contains {
-		statement = generateSearchStatement(properties, false)
-	} else {
-		statement = generateSearchStatement(properties, true)
-	}
-	bindings := generateSearchBindings(properties, startsWith, contains)
-
+func FindNodes(statement string, bindings []string, database ...string) ([]string, error) {
 	find := func(db *sql.DB) ([]string, error) {
 		stmt, stmtErr := db.Prepare(statement)
 		evaluate(stmtErr)
@@ -485,7 +485,6 @@ func traverseWithBodies(source string, statement string, target string) func(*sq
 		}
 		defer rows.Close()
 
-		count := 0
 		currentId := ""
 		for rows.Next() {
 			var identifier string
@@ -495,22 +494,19 @@ func traverseWithBodies(source string, statement string, target string) func(*sq
 			if err != nil {
 				return results, err
 			}
-			if count > 0 {
-				if object == "()" {
-					currentId = identifier
-					results = append(results, GraphData{Node: NodeData{Identifier: identifier, Body: body}})
+			if object == "()" {
+				currentId = identifier
+				results = append(results, GraphData{Node: NodeData{Identifier: identifier, Body: body}})
+			} else {
+				if object == "->" {
+					results = append(results, GraphData{Edge: EdgeData{Source: currentId, Target: identifier, Label: body}})
 				} else {
-					if object == "->" {
-						results = append(results, GraphData{Edge: EdgeData{Source: currentId, Target: identifier, Label: body}})
-					} else {
-						results = append(results, GraphData{Edge: EdgeData{Source: identifier, Target: currentId, Label: body}})
-					}
-				}
-				if len(target) > 0 && identifier == target && object == "()" {
-					break
+					results = append(results, GraphData{Edge: EdgeData{Source: identifier, Target: currentId, Label: body}})
 				}
 			}
-			count += 1
+			if len(target) > 0 && identifier == target && object == "()" {
+				break
+			}
 		}
 		err = rows.Err()
 		return results, err
