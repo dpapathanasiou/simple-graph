@@ -9,17 +9,11 @@ The [schema](sql/schema.sql) consists of just two structures:
 * Nodes - these are any [json](https://www.json.org/) objects, with the only constraint being that they each contain a unique `id` value 
 * Edges - these are pairs of node `id` values, specifying the direction, with an optional json object as connection properties
 
-There are also traversal functions as native SQLite [Common Table Expressions](https://www.sqlite.org/lang_with.html) which produce lists of identifiers or return all objects along the path:
+The create, read, update, and delete functions ([.sql files](sql)) are complete statements with [qmark](https://docs.python.org/3/library/sqlite3.html#sqlite3.paramstyle) bindings.
 
-* Both directions
-  * [identifiers](sql/traverse.sql)
-  * [all objects](sql/traverse-with-bodies.sql)
-* Inbound
-  * [identifiers](sql/traverse-inbound.sql)
-  * [all objects](sql/traverse-with-bodies-inbound.sql)
-* Outbound
-  * [identifiers](sql/traverse-outbound.sql)
-  * [all objects](sql/traverse-with-bodies-outbound.sql)
+Search templates ([.template files](sql)) are in [Jinja2](https://pypi.org/project/Jinja2/) format, which can be converted to other template syntaxes relatively easily, with a bit of [regex magic](https://github.com/dpapathanasiou/simple-graph-go/blob/main/generate-constants.sh) (though it would be nice if they could be expressed in a more language-agnostic way).
+
+There are also traversal function templates as native SQLite [Common Table Expressions](https://www.sqlite.org/lang_with.html) which produce lists of identifiers or return all objects along the path.
 
 # Applications
 
@@ -40,7 +34,7 @@ The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database c
 
 Choose an implementation:
 
-* [Python](python) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
+* [Python](https://github.com/dpapathanasiou/simple-graph-pypi) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
 * [Go](go)
 * [Julia](https://github.com/JuliaComputing/SQLiteGraph.jl) (courtesy of [Josh Day](https://github.com/joshday))
 * [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva](https://github.com/mikeasilva))
