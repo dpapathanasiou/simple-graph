@@ -1,3 +1,0 @@
-graphviz
-pytest
-Jinja2
