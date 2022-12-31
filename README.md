@@ -35,7 +35,7 @@ The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database c
 Choose an implementation:
 
 * [Python](https://github.com/dpapathanasiou/simple-graph-pypi) (now [available in PyPI](https://pypi.org/project/simple-graph-sqlite/))
-* [Go](go)
+* [Go](https://github.com/dpapathanasiou/simple-graph-go)
 * [Julia](https://github.com/JuliaComputing/SQLiteGraph.jl) (courtesy of [Josh Day](https://github.com/joshday))
 * [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva](https://github.com/mikeasilva))
 * [Flutter and Dart](https://github.com/rodydavis/flutter_graph_database) (courtesy of [Rody Davis](https://github.com/rodydavis))
