@@ -28,7 +28,7 @@ There are also traversal function templates as native SQLite [Common Table Expre
 
 ## RESTful API (paid)
 
-The [Banrai Simple Doc Store](https://banrai.net/) service wraps this database core with an API service, creating a no-admin database for both documents and graphs.
+The [Banrai Simple Graph Database and Document Store](https://banrai.com/) wraps this core logic with an API service, creating a managed graph database and document store, with additional features not found in any of the public bindings.
 
 ## Importable library (free)
 
