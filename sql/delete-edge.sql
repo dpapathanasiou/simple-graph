@@ -1,1 +1,1 @@
-DELETE FROM edges WHERE source = ? OR target = ?
+DELETE FROM edges WHERE source = ? AND target = ?
