@@ -39,6 +39,7 @@ Choose an implementation:
 * [Julia](https://github.com/JuliaComputing/SQLiteGraph.jl) (courtesy of [Josh Day](https://github.com/joshday))
 * [R](https://github.com/mikeasilva/simplegraphdb) (courtesy of [Michael Silva](https://github.com/mikeasilva))
 * [Flutter and Dart](https://github.com/rodydavis/flutter_graph_database) (courtesy of [Rody Davis](https://github.com/rodydavis))
+* [Swift](https://swiftpackageindex.com/Jomy10/SimpleGraph) (Courtesy of [Jonas Everaert](https://github.com/jomy10)
 
 Want to contribute an implementation in your preferred programming language?
 
